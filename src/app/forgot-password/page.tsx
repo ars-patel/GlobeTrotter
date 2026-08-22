@@ -15,14 +15,12 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [devResetPath, setDevResetPath] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setMessage(null);
-    setDevResetPath(null);
 
     const parsed = forgotPasswordSchema.safeParse({ email });
     if (!parsed.success) {
@@ -40,14 +38,15 @@ export default function ForgotPasswordPage() {
       const data = (await res.json()) as {
         error?: string;
         message?: string;
-        resetPath?: string;
       };
       if (!res.ok) {
         setError(data.error ?? "Request failed");
         return;
       }
-      setMessage(data.message ?? "Check your email for reset instructions.");
-      if (data.resetPath) setDevResetPath(data.resetPath);
+      setMessage(
+        data.message ??
+          "If an account exists for that email, password reset instructions were sent."
+      );
     } catch {
       setError("Unable to submit request. Try again.");
     } finally {
@@ -71,16 +70,6 @@ export default function ForgotPasswordPage() {
             {message ? (
               <Alert>
                 <AlertDescription>{message}</AlertDescription>
-              </Alert>
-            ) : null}
-            {devResetPath ? (
-              <Alert>
-                <AlertDescription>
-                  Dev reset link:{" "}
-                  <Link href={devResetPath} className="underline underline-offset-4">
-                    Continue
-                  </Link>
-                </AlertDescription>
               </Alert>
             ) : null}
 

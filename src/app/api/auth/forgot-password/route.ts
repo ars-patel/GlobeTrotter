@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { createResetToken } from "@/lib/auth/password";
 import { forgotPasswordSchema } from "@/lib/auth/schemas";
+import { isSmtpConfigured, sendPasswordResetEmail } from "@/lib/mail";
 
 export const runtime = "nodejs";
 
 /**
  * Always returns a generic success message (do not reveal whether email exists).
- * In local/dev, includes resetToken when the user exists so the flow is testable without email.
+ * Sends reset link via Nodemailer when SMTP_* env vars are configured.
  */
 export async function POST(request: Request) {
   try {
@@ -26,13 +27,23 @@ export async function POST(request: Request) {
         "If an account exists for that email, password reset instructions were sent.",
     };
 
-    const { rows } = await query<{ id: string }>(
-      `SELECT id FROM users WHERE email = $1`,
+    const { rows } = await query<{ id: string; first_name: string | null }>(
+      `SELECT id, first_name FROM users WHERE email = $1`,
       [email]
     );
     const user = rows[0];
     if (!user) {
       return NextResponse.json(generic);
+    }
+
+    if (!isSmtpConfigured()) {
+      return NextResponse.json(
+        {
+          error:
+            "Email is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM in .env.",
+        },
+        { status: 503 }
+      );
     }
 
     const { token, tokenHash } = createResetToken();
@@ -44,13 +55,29 @@ export async function POST(request: Request) {
       [user.id, tokenHash, expiresAt.toISOString()]
     );
 
-    const response: Record<string, string> = { ...generic };
-    if (process.env.NODE_ENV !== "production") {
-      response.resetToken = token;
-      response.resetPath = `/reset-password?token=${token}`;
+    const appUrl = (
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    ).replace(/\/$/, "");
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    try {
+      await sendPasswordResetEmail({
+        to: email,
+        resetUrl,
+        firstName: user.first_name,
+      });
+    } catch (mailError) {
+      console.error("Nodemailer send failed:", mailError);
+      return NextResponse.json(
+        {
+          error:
+            "Could not send the reset email. Check SMTP settings in .env and try again.",
+        },
+        { status: 502 }
+      );
     }
 
-    return NextResponse.json(response);
+    return NextResponse.json(generic);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to process request";

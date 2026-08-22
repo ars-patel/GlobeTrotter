@@ -21,7 +21,19 @@ Personalized multi-city travel planning — **Next.js** (App Router + API routes
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/GlobeTrotter
 JWT_SECRET=change-me-to-a-long-random-string
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Nodemailer — password reset emails
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM="GlobeTrotter <your-email@gmail.com>"
+SMTP_REPLY_TO=your-email@gmail.com
 ```
+
+Templates live in `emails/templates/` (HTML + plain text). Keep `SMTP_FROM` on the same address as `SMTP_USER` to reduce spam filtering. For custom domains, add SPF/DKIM/DMARC DNS records.
+
+For Gmail, use an [App Password](https://myaccount.google.com/apppasswords) (not your normal account password). Restart `npm run dev` after changing `.env`.
 
 3. Apply pending migrations + seeds (then auto-archive applied files):
 
