@@ -22,7 +22,10 @@ export type FeaturedTripItem = {
 };
 
 function tripHref(trip: FeaturedTripItem) {
-  if (trip.share_slug) return `/share/${trip.share_slug}`;
+  // Only send guests to the public share page when the trip is actually public.
+  if (trip.is_public && trip.share_slug) {
+    return `/share/${encodeURIComponent(trip.share_slug)}`;
+  }
   return `/trips/${trip.id}/itinerary`;
 }
 

@@ -82,17 +82,23 @@ export async function getCurrentUser(): Promise<PublicUser | null> {
   const session = verifySessionToken(token);
   if (!session) return null;
 
-  const { rows } = await query<PublicUser>(
+  const { rows } = await query(
     `SELECT
        id, email, username, first_name, last_name, name,
        phone, home_city, home_country, additional_info,
-       photo_url, language, role, created_at::text
+       photo_url, language, role, created_at::text,
+       is_suspended
      FROM users
      WHERE id = $1`,
     [session.sub]
   );
 
-  return rows[0] ?? null;
+  const row = rows[0] as
+    | (Record<string, unknown> & { is_suspended: boolean })
+    | undefined;
+  if (!row || row.is_suspended) return null;
+
+  return toPublicUser(row);
 }
 
 export function toPublicUser(row: Record<string, unknown>): PublicUser {

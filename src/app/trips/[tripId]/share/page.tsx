@@ -23,6 +23,7 @@ export default async function TripSharePage({ params }: Props) {
           <p className="text-sm text-muted-foreground">{trip.name}</p>
         </div>
         <ShareTripPanel
+          key={tripId}
           tripId={tripId}
           tripName={String(trip.name)}
           initialPublic={Boolean(trip.is_public)}

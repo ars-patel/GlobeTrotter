@@ -33,14 +33,20 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   const { rows } = await query(
     `UPDATE trips
      SET is_public = $1,
-         share_slug = CASE WHEN $1 THEN COALESCE(share_slug, $2) ELSE share_slug END,
+         share_slug = CASE
+           WHEN $1 THEN COALESCE(share_slug, $2)
+           ELSE share_slug
+         END,
          updated_at = NOW()
-     WHERE id = $3
-     RETURNING id, is_public, share_slug`,
-    [parsed.data.is_public, slug, tripId]
+     WHERE id = $3 AND user_id = $4
+     RETURNING id, name, is_public, share_slug`,
+    [parsed.data.is_public, slug, tripId, auth.user.id]
   );
 
   const updated = rows[0];
+  if (!updated) {
+    return NextResponse.json({ error: "Trip not found" }, { status: 404 });
+  }
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
     /\/$/,
     ""

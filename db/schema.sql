@@ -27,6 +27,9 @@ CREATE TABLE users (
   photo_url     TEXT,
   language      VARCHAR(10) NOT NULL DEFAULT 'en',
   role          user_role NOT NULL DEFAULT 'USER',
+  is_suspended  BOOLEAN NOT NULL DEFAULT FALSE,
+  suspended_at  TIMESTAMPTZ,
+  suspended_reason TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

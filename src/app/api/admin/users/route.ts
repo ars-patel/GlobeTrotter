@@ -17,6 +17,7 @@ export async function GET() {
        u.last_name,
        u.name,
        u.role::text AS role,
+       u.is_suspended,
        u.created_at::text AS created_at,
        (SELECT COUNT(*)::int FROM trips t WHERE t.user_id = u.id) AS trip_count
      FROM users u
@@ -33,6 +34,7 @@ export async function GET() {
       last_name: String(r.last_name),
       name: String(r.name),
       role: r.role === "ADMIN" ? "ADMIN" : "USER",
+      is_suspended: Boolean(r.is_suspended),
       created_at: String(r.created_at).slice(0, 10),
       trip_count: Number(r.trip_count),
     })),

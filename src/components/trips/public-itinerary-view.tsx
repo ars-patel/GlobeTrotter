@@ -167,7 +167,9 @@ export function PublicItineraryView({
           </p>
         ) : (
           stops.map((s) => {
-            const items = activities.filter((a) => a.stop_id === s.id);
+                const items = activities.filter(
+                  (a) => String(a.stop_id) === String(s.id)
+                );
             return (
               <section key={s.id} className="space-y-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

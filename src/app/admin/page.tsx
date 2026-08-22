@@ -31,6 +31,7 @@ export default async function AdminPage() {
        u.username,
        u.name,
        u.role::text AS role,
+       u.is_suspended,
        u.created_at::text AS created_at,
        (SELECT COUNT(*)::int FROM trips t WHERE t.user_id = u.id) AS trip_count
      FROM users u
@@ -200,15 +201,18 @@ export default async function AdminPage() {
           <TabsContent value="users" className="mt-4 space-y-3">
             <h2 className="text-base font-semibold">User management</h2>
             <p className="text-sm text-muted-foreground">
-              Promote or demote admins. Password hashes are never exposed.
+              Promote, demote, suspend, or delete users. Password hashes are never
+              exposed.
             </p>
             <AdminUsersTable
+              currentUserId={user.id}
               users={users.map((u) => ({
                 id: String(u.id),
                 email: String(u.email),
                 username: u.username == null ? null : String(u.username),
                 name: String(u.name),
                 role: u.role === "ADMIN" ? "ADMIN" : "USER",
+                is_suspended: Boolean(u.is_suspended),
                 created_at: String(u.created_at).slice(0, 10),
                 trip_count: Number(u.trip_count),
               }))}

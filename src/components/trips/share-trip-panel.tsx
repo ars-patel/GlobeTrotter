@@ -32,6 +32,14 @@ export function ShareTripPanel({
   const [loading, setLoading] = useState(false);
   const [clientOrigin, setClientOrigin] = useState(origin);
 
+  // Soft-nav between trips reuses this client component — always sync from props.
+  useEffect(() => {
+    setIsPublic(initialPublic);
+    setSlug(initialSlug);
+    setError(null);
+    setMessage(null);
+  }, [tripId, initialPublic, initialSlug]);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setClientOrigin(window.location.origin);
@@ -39,7 +47,7 @@ export function ShareTripPanel({
   }, []);
 
   const shareUrl =
-    isPublic && slug ? `${clientOrigin}/share/${slug}` : "";
+    isPublic && slug ? `${clientOrigin}/share/${encodeURIComponent(slug)}` : "";
 
   async function toggle(next: boolean) {
     setLoading(true);
@@ -53,9 +61,18 @@ export function ShareTripPanel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Share update failed");
-      setIsPublic(Boolean(data.trip?.is_public));
-      setSlug(data.trip?.share_slug ?? null);
-      setMessage(next ? "Trip is public" : "Trip is private");
+
+      const nextPublic = Boolean(data.trip?.is_public);
+      const nextSlug =
+        typeof data.trip?.share_slug === "string" ? data.trip.share_slug : null;
+
+      setIsPublic(nextPublic);
+      setSlug(nextSlug);
+      setMessage(
+        nextPublic
+          ? `“${tripName}” is public — link is ready to share`
+          : `“${tripName}” is private again`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -67,14 +84,15 @@ export function ShareTripPanel({
     <div className="space-y-4 rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <Label htmlFor="public">Public sharing</Label>
+          <Label htmlFor={`public-${tripId}`}>Public sharing</Label>
           <p className="text-xs text-muted-foreground">
-            Anyone with the link can view a read-only itinerary and copy the
-            trip
+            Anyone with the link can view a read-only itinerary for{" "}
+            <span className="font-medium text-foreground">{tripName}</span> and
+            copy the trip
           </p>
         </div>
         <Switch
-          id="public"
+          id={`public-${tripId}`}
           checked={isPublic}
           disabled={loading}
           onCheckedChange={(v) => void toggle(Boolean(v))}
@@ -91,12 +109,17 @@ export function ShareTripPanel({
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
-      {shareUrl ? (
+      {shareUrl && slug ? (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="url">Public URL</Label>
+            <Label htmlFor={`url-${tripId}`}>Public URL</Label>
             <div className="flex flex-wrap gap-2">
-              <Input id="url" readOnly value={shareUrl} className="min-w-0 flex-1" />
+              <Input
+                id={`url-${tripId}`}
+                readOnly
+                value={shareUrl}
+                className="min-w-0 flex-1"
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -105,7 +128,7 @@ export function ShareTripPanel({
                 Copy
               </Button>
               <Link
-                href={`/share/${slug}`}
+                href={`/share/${encodeURIComponent(slug)}`}
                 target="_blank"
                 className={cn(buttonVariants({ variant: "secondary" }))}
               >
