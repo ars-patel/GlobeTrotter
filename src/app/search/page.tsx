@@ -203,7 +203,7 @@ export default async function SearchPage({ searchParams }: Props) {
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             {type === "city"
-              ? "Search cities from the live catalog, filter by country or region, then add a stop to your trip or browse activities."
+              ? "Search cities, filter by country or region, then add a stop to your trip or browse activities."
               : "Filter experiences by interest, cost, and duration — then add them to a trip stop."}
           </p>
 
@@ -426,9 +426,19 @@ export default async function SearchPage({ searchParams }: Props) {
             </Empty>
           ) : (
             <div className="mt-4 grid gap-4">
-              {cities.map((city) => (
-                <CitySearchCard key={city.id} city={city} tripId={tripId} />
-              ))}
+              {cities.map((city) => {
+                const journeyFromCity =
+                  citiesCatalog.rows.find((c) => c.id !== city.id)?.name ??
+                  cities.find((c) => c.id !== city.id)?.name;
+                return (
+                  <CitySearchCard
+                    key={city.id}
+                    city={city}
+                    tripId={tripId}
+                    journeyFromCity={journeyFromCity}
+                  />
+                );
+              })}
             </div>
           )
         ) : activities.length === 0 ? (

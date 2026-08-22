@@ -152,10 +152,10 @@ async function loadDiscoverData(userId: string) {
     banner: {
       url: map["discover.banner_url"] ?? null,
       alt: map["discover.banner_alt"] ?? "Travel inspiration",
-      title: map["discover.hero_title"] ?? "Your travel hub",
+      title: map["discover.hero_title"] ?? "Your travel planning hub",
       subtitle:
         map["discover.hero_subtitle"] ??
-        "Plan multi-city itineraries, book journeys, track budgets, and explore destinations — all from here.",
+        "Build multi-city itineraries, track budgets, explore destinations, and share plans — all from here.",
     },
     topDestinations: destinations.rows,
     featuredTrips: featured.rows,

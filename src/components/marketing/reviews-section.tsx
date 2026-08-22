@@ -1,5 +1,4 @@
 import { StarIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export type MarketingReview = {
   id: string;
@@ -18,8 +17,7 @@ export function ReviewsSection({ reviews }: { reviews: MarketingReview[] }) {
           Traveler reviews
         </h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Feedback stored in PostgreSQL. Demo rows are labeled when seeded for
-          development.
+          What travelers say about planning with GlobeTrotter.
         </p>
 
         <div className="mt-10 grid gap-5 md:grid-cols-3">
@@ -30,9 +28,6 @@ export function ReviewsSection({ reviews }: { reviews: MarketingReview[] }) {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold">{r.author_name}</p>
-                {r.is_demo ? (
-                  <Badge variant="secondary">Demo seed</Badge>
-                ) : null}
               </div>
               <div className="mt-2 flex items-center gap-1 text-sm">
                 <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />
@@ -50,7 +45,7 @@ export function ReviewsSection({ reviews }: { reviews: MarketingReview[] }) {
 
         {reviews.length === 0 ? (
           <p className="mt-8 text-sm text-muted-foreground">
-            No reviews yet. Add rows to the reviews table to show testimonials.
+            No reviews yet. Be the first to share your trip experience.
           </p>
         ) : null}
       </div>

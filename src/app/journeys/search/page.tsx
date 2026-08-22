@@ -65,8 +65,8 @@ export default async function JourneySearchPage({ searchParams }: Props) {
             Search results
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Journeys queried from PostgreSQL with your filters preserved in the
-            URL.
+            Compare routes, seats, and prices — your search filters stay in the
+            link so you can share or refresh anytime.
           </p>
 
           <div className="mt-6">
@@ -119,14 +119,18 @@ export default async function JourneySearchPage({ searchParams }: Props) {
             <div className="mt-10 rounded-2xl border border-dashed p-8 text-center">
               <p className="font-medium">No journeys match this search</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Try Paris → Barcelona from Sep 5, 2026, or broaden the date.
+                {destRes.rows.length >= 2
+                  ? `Try ${destRes.rows[0].name} → ${destRes.rows[1].name} from Sep 5, 2026, or broaden the date.`
+                  : "Broaden the date or pick different cities from the catalog."}
               </p>
-              <Link
-                href="/journeys/search?from=Paris&to=Barcelona&departure=2026-09-05&passengers=1"
-                className={cn(buttonVariants({ size: "sm" }), "mt-4")}
-              >
-                Try sample search
-              </Link>
+              {destRes.rows.length >= 2 ? (
+                <Link
+                  href={`/journeys/search?from=${encodeURIComponent(destRes.rows[0].name)}&to=${encodeURIComponent(destRes.rows[1].name)}&departure=2026-09-05&passengers=1`}
+                  className={cn(buttonVariants({ size: "sm" }), "mt-4")}
+                >
+                  Try sample search
+                </Link>
+              ) : null}
             </div>
           ) : null}
 

@@ -1,29 +1,22 @@
 import Link from "next/link";
 import {
-  BusIcon,
+  CalendarDaysIcon,
   MapIcon,
   PlusCircleIcon,
   SearchIcon,
-  WalletIcon,
 } from "lucide-react";
 
 const ACTIONS = [
   {
     href: "/trips/new",
-    title: "Plan an itinerary",
-    body: "Create a multi-city trip with dates, stops, and activities.",
+    title: "Plan New Trip",
+    body: "Start a multi-city itinerary with dates, stops, and a budget.",
     icon: PlusCircleIcon,
-  },
-  {
-    href: "/journeys/search",
-    title: "Book a journey",
-    body: "Search bus routes by from, to, and departure date.",
-    icon: BusIcon,
   },
   {
     href: "/search?type=city",
     title: "Find destinations",
-    body: "Browse cities and activities from the live catalog.",
+    body: "Browse cities and activities to add to your trip stops.",
     icon: SearchIcon,
   },
   {
@@ -32,45 +25,38 @@ const ACTIONS = [
     body: "Open builders, budgets, calendars, and shared links.",
     icon: MapIcon,
   },
+  {
+    href: "/schedule",
+    title: "View schedule",
+    body: "See upcoming stops and activities on your calendar.",
+    icon: CalendarDaysIcon,
+  },
 ] as const;
 
 export function DiscoverQuickActions() {
   return (
     <section className="space-y-4">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          Start here
-        </p>
-        <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
-          What do you want to do?
+        <h2 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
+          Quick actions
         </h2>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Discover is your hub after login — pick one clear next step.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Jump into the planning tools you use most.
         </p>
       </div>
-
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {ACTIONS.map((a) => (
           <Link
             key={a.href}
             href={a.href}
-            className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+            className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-              <a.icon className="size-5" />
-            </span>
-            <h3 className="mt-3 text-base font-semibold">{a.title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              {a.body}
-            </p>
+            <a.icon className="size-5 text-primary transition group-hover:scale-105" />
+            <h3 className="mt-3 font-semibold">{a.title}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{a.body}</p>
           </Link>
         ))}
       </div>
-
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <WalletIcon className="size-3.5" />
-        Tip: open any trip → Budget to track spend against your limit.
-      </p>
     </section>
   );
 }

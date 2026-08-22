@@ -88,7 +88,11 @@ scripts/db-apply.mjs     # npm run db:apply
 - `GET /api/cities`
 - `GET /api/activities`
 
-### Demo login (after seed)
+### Demo accounts (after seed)
 
-- Email / username: `demo@globetrotter.app` / `demo`
-- Password: `password123`
+| Role | Email | Username | Password |
+|------|-------|----------|----------|
+| **ADMIN** | `demo@globetrotter.app` | `demo` | `password123` |
+| **USER** | `traveler@globetrotter.app` | `traveler` | `password123` |
+
+Each account has its own trips, bookings, and saved destinations (data is not shared across users). Admin also unlocks `/admin`.

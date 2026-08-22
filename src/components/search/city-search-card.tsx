@@ -19,10 +19,20 @@ export type CitySearchItem = {
 export function CitySearchCard({
   city,
   tripId,
+  journeyFromCity,
 }: {
   city: CitySearchItem;
   tripId?: string;
+  /** Another catalog city for journey search "from" (never hardcode Europe hubs). */
+  journeyFromCity?: string;
 }) {
+  const fromCity =
+    journeyFromCity && journeyFromCity !== city.name
+      ? journeyFromCity
+      : undefined;
+  const journeyHref = fromCity
+    ? `/journeys/search?to=${encodeURIComponent(city.name)}&from=${encodeURIComponent(fromCity)}&departure=2026-09-05&passengers=1`
+    : `/journeys/search?to=${encodeURIComponent(city.name)}`;
   return (
     <article className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="grid sm:grid-cols-[180px_1fr]">
@@ -85,7 +95,7 @@ export function CitySearchCard({
               View activities
             </Link>
             <Link
-              href={`/journeys/search?to=${encodeURIComponent(city.name)}&from=Paris&departure=2026-09-01&passengers=1`}
+              href={journeyHref}
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >
               Find journeys

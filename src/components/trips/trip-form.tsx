@@ -278,7 +278,7 @@ export function TripForm() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={loading}
-                    placeholder="e.g. Europe summer loop"
+                    placeholder="e.g. Asia Pacific loop"
                     autoFocus
                     required
                   />

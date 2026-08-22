@@ -37,7 +37,7 @@ export function TopDestinationsRow({ cities }: { cities: DestinationItem[] }) {
           <EmptyHeader>
             <EmptyTitle>No destinations yet</EmptyTitle>
             <EmptyDescription>
-              Seed the cities catalog to populate this row.
+              Destinations will show up here once they are available.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

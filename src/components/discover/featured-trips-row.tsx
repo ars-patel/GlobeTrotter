@@ -96,8 +96,7 @@ export function FeaturedTripsRow({ trips }: { trips: FeaturedTripItem[] }) {
           <EmptyHeader>
             <EmptyTitle>No featured trips yet</EmptyTitle>
             <EmptyDescription>
-              Share a public trip or seed featured itineraries to fill this
-              section.
+              Featured itineraries will appear here when travelers share them.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

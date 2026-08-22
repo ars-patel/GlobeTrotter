@@ -33,7 +33,7 @@ export default async function CommunityPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Community Talk</h1>
             <p className="text-sm text-muted-foreground">
-              Posts load live from PostgreSQL
+              Tips, trip stories, and questions from fellow travelers
             </p>
           </div>
 

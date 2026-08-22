@@ -51,13 +51,14 @@
 npm run dev
 ```
 
-4. Optional demo user (from seed):
+4. Demo accounts (from seed):
 
-| Field | Value |
-|---|---|
-| Email | `demo@globetrotter.app` |
-| Username | `demo` |
-| Password | `password123` |
+| Role | Email | Username | Password |
+|---|---|---|---|
+| **ADMIN** | `demo@globetrotter.app` | `demo` | `password123` |
+| **USER** | `traveler@globetrotter.app` | `traveler` | `password123` |
+
+Admin unlocks `/admin` and owns different trips/bookings than the traveler account.
 
 5. Browser: use a **private/incognito** window for clean cookie tests (or clear site cookies for `localhost:3000`).
 
@@ -79,8 +80,9 @@ npm run dev
 |---|---|---|
 | 2.1 | View `/login` | Logo/brand, **Username**, **Password**, Login, link to register, Forgot password? |
 | 2.2 | Submit empty form | Validation error (identifier/password required) |
-| 2.3 | Login `demo` / `password123` | Redirect to `/discover`; header shows Log Out |
+| 2.3 | Login `demo` / `password123` | Redirect to `/discover`; header shows Log Out; Admin link visible |
 | 2.4 | Login `demo@globetrotter.app` / `password123` | Same success (email as identifier) |
+| 2.4b | Logout, then login `traveler` / `password123` | USER session; no Admin nav; different My Trips / bookings |
 | 2.5 | Login `demo` / `wrong` | Error: invalid credentials (no user dump) |
 | 2.6 | While logged in, open `/login` | Redirect to `/discover` |
 

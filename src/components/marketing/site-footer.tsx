@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Globe2Icon,
-  Share2Icon,
-} from "lucide-react";
+import { Globe2Icon, Share2Icon } from "lucide-react";
 import { useAuthModal } from "@/components/auth/auth-modal-context";
 
 export function SiteFooter() {
@@ -19,7 +16,8 @@ export function SiteFooter() {
             <span className="font-display text-xl font-bold">GlobeTrotter</span>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-background/70">
-            Making every journey easier, from search to arrival.
+            Personalized multi-city travel planning — itineraries, budgets, and
+            sharing in one place.
           </p>
           <div className="mt-5 flex gap-3">
             <a
@@ -36,7 +34,7 @@ export function SiteFooter() {
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-background/50">
-            Explore
+            Product
           </p>
           <ul className="mt-4 space-y-2.5 text-sm text-background/75">
             <li>
@@ -45,18 +43,13 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <Link href="/journeys/search" className="hover:text-background">
-                Bus Tickets
-              </Link>
-            </li>
-            <li>
-              <a href="#explore" className="hover:text-background">
-                Tours
+              <a href="#how-it-works" className="hover:text-background">
+                How to book
               </a>
             </li>
             <li>
-              <a href="#featured" className="hover:text-background">
-                Featured Trips
+              <a href="#features" className="hover:text-background">
+                Features
               </a>
             </li>
           </ul>
@@ -64,28 +57,39 @@ export function SiteFooter() {
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-background/50">
-            Company
+            Plan
           </p>
           <ul className="mt-4 space-y-2.5 text-sm text-background/75">
             <li>
-              <a href="#how-it-works" className="hover:text-background">
-                About
-              </a>
+              <button
+                type="button"
+                className="hover:text-background"
+                onClick={() => openAuth("signup", "/trips/new")}
+              >
+                Plan New Trip
+              </button>
             </li>
             <li>
-              <a href="mailto:hello@globetrotter.app" className="hover:text-background">
-                Contact
-              </a>
+              <Link href="/discover" className="hover:text-background">
+                Discover
+              </Link>
             </li>
             <li>
-              <span className="text-background/50">Careers</span>
+              <Link href="/trips" className="hover:text-background">
+                My Trips
+              </Link>
+            </li>
+            <li>
+              <Link href="/community" className="hover:text-background">
+                Community
+              </Link>
             </li>
           </ul>
         </div>
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-background/50">
-            Support
+            Account
           </p>
           <ul className="mt-4 space-y-2.5 text-sm text-background/75">
             <li>
@@ -94,22 +98,25 @@ export function SiteFooter() {
                 className="hover:text-background"
                 onClick={() => openAuth("login")}
               >
-                Help Center
+                Login
               </button>
             </li>
             <li>
-              <a href="#how-it-works" className="hover:text-background">
-                FAQ
+              <button
+                type="button"
+                className="hover:text-background"
+                onClick={() => openAuth("signup")}
+              >
+                Sign up
+              </button>
+            </li>
+            <li>
+              <a
+                href="mailto:hello@globetrotter.app"
+                className="hover:text-background"
+              >
+                Contact
               </a>
-            </li>
-            <li>
-              <span className="text-background/50">Cancellation Policy</span>
-            </li>
-            <li>
-              <span className="text-background/50">Terms & Conditions</span>
-            </li>
-            <li>
-              <span className="text-background/50">Privacy Policy</span>
             </li>
           </ul>
         </div>

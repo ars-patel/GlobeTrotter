@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
-  BusIcon,
+  CalendarDaysIcon,
   Globe2Icon,
+  MapIcon,
   MenuIcon,
+  RouteIcon,
   UserIcon,
+  WalletIcon,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -25,14 +27,13 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAuthModal } from "@/components/auth/auth-modal-context";
+import { useEffect, useState } from "react";
 
 const NAV = [
   { href: "/", label: "Home" },
-  { href: "#explore", label: "Explore" },
   { href: "#destinations", label: "Destinations" },
-  { href: "/journeys/search", label: "Bus Tickets" },
-  { href: "#explore", label: "Tours" },
-  { href: "/bookings", label: "My Bookings" },
+  { href: "#how-it-works", label: "How to book" },
+  { href: "#features", label: "Features" },
 ] as const;
 
 type MeUser = {
@@ -75,7 +76,7 @@ export function SiteNavbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
           <span className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <Globe2Icon className="size-4" />
           </span>
@@ -98,46 +99,57 @@ export function SiteNavbar() {
 
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger
+            <>
+              <Link
+                href="/trips/new"
                 className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "gap-2"
+                  buttonVariants({ size: "sm" }),
+                  "hidden font-semibold sm:inline-flex"
                 )}
               >
-                <UserIcon className="size-4" />
-                <span className="hidden max-w-28 truncate sm:inline">
-                  {user.name}
-                </span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    window.location.href = "/discover";
-                  }}
+                Plan New Trip
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "gap-2"
+                  )}
                 >
-                  Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    window.location.href = "/bookings";
-                  }}
-                >
-                  My Bookings
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    window.location.href = "/profile";
-                  }}
-                >
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => void logout()}>
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <UserIcon className="size-4" />
+                  <span className="hidden max-w-28 truncate sm:inline">
+                    {user.name}
+                  </span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      window.location.href = "/discover";
+                    }}
+                  >
+                    Discover
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      window.location.href = "/trips";
+                    }}
+                  >
+                    My Trips
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      window.location.href = "/profile";
+                    }}
+                  >
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => void logout()}>
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <>
               <button
@@ -152,10 +164,13 @@ export function SiteNavbar() {
               </button>
               <button
                 type="button"
-                onClick={() => openAuth("signup")}
-                className={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex")}
+                onClick={() => openAuth("signup", "/trips/new")}
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "hidden font-semibold sm:inline-flex"
+                )}
               >
-                Register
+                Plan New Trip
               </button>
             </>
           )}
@@ -188,34 +203,64 @@ export function SiteNavbar() {
                   </Link>
                 ))}
               </div>
-              {!user ? (
-                <div className="mt-6 flex flex-col gap-2 border-t pt-4">
-                  <button
-                    type="button"
-                    className={cn(buttonVariants({ variant: "outline" }), "w-full")}
-                    onClick={() => {
-                      setMobileOpen(false);
-                      openAuth("login");
-                    }}
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(buttonVariants(), "w-full")}
-                    onClick={() => {
-                      setMobileOpen(false);
-                      openAuth("signup");
-                    }}
-                  >
-                    Register
-                  </button>
-                </div>
-              ) : null}
+              <div className="mt-6 flex flex-col gap-2 border-t pt-4">
+                {user ? (
+                  <>
+                    <Link
+                      href="/trips/new"
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(buttonVariants(), "w-full")}
+                    >
+                      Plan New Trip
+                    </Link>
+                    <Link
+                      href="/discover"
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "w-full"
+                      )}
+                    >
+                      Open Discover
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className={cn(buttonVariants(), "w-full")}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        openAuth("signup", "/trips/new");
+                      }}
+                    >
+                      Plan New Trip
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "w-full"
+                      )}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        openAuth("login");
+                      }}
+                    >
+                      Login
+                    </button>
+                  </>
+                )}
+              </div>
               <p className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
-                <BusIcon className="size-3.5" />
-                Search journeys anytime from the hero.
+                <RouteIcon className="size-3.5" />
+                Multi-city itineraries, budgets, and sharing.
               </p>
+              <div className="mt-3 flex gap-3 text-muted-foreground">
+                <MapIcon className="size-3.5" />
+                <CalendarDaysIcon className="size-3.5" />
+                <WalletIcon className="size-3.5" />
+              </div>
             </SheetContent>
           </Sheet>
         </div>

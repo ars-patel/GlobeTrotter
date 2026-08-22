@@ -51,13 +51,13 @@ export function HeroBanner({
             Plan New Trip
           </Link>
           <Link
-            href="/journeys/search"
+            href="/trips"
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
               "font-medium"
             )}
           >
-            Search Journeys
+            My Trips
           </Link>
           <Link
             href="/search?type=city"

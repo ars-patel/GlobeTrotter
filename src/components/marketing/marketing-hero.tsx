@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BookingSearchCard, type DestinationOption } from "@/components/marketing/booking-search-card";
+import { useAuthModal } from "@/components/auth/auth-modal-context";
 
 export function MarketingHero({
   imageUrl,
   imageAlt,
-  destinations,
 }: {
   imageUrl: string;
   imageAlt: string;
-  destinations: DestinationOption[];
 }) {
+  const { openAuth } = useAuthModal();
+
   return (
     <section className="relative w-full">
       <div className="relative min-h-[70vh] w-full overflow-hidden sm:min-h-[78vh]">
@@ -25,23 +25,27 @@ export function MarketingHero({
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative mx-auto flex min-h-[70vh] w-full max-w-6xl flex-col justify-center px-4 py-20 sm:min-h-[78vh] sm:px-6">
-          <h1 className="max-w-2xl font-display text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
-            Your Journey Starts Here
+          <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
+            GlobeTrotter
+          </p>
+          <h1 className="mt-3 max-w-2xl font-display text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
+            Plan multi-city trips with clarity
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Discover destinations, compare available journeys, and book your
-            next trip with confidence.
+            Build itineraries, set budgets, and share your plans — travel
+            planning made personal and organized.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href="#search"
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => openAuth("signup", "/trips/new")}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "bg-white font-semibold text-primary hover:bg-white/90"
               )}
             >
-              Search Trips
-            </a>
+              Plan New Trip
+            </button>
             <Link
               href="#destinations"
               className={cn(
@@ -49,17 +53,10 @@ export function MarketingHero({
                 "border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
               )}
             >
-              Explore Journeys
+              Explore destinations
             </Link>
           </div>
         </div>
-      </div>
-
-      <div
-        id="search"
-        className="relative z-10 mx-auto -mt-16 w-full max-w-6xl px-4 sm:-mt-20 sm:px-6"
-      >
-        <BookingSearchCard destinations={destinations} />
       </div>
     </section>
   );

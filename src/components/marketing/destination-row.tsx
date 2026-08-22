@@ -20,11 +20,11 @@ export function DestinationRow({
     <section id="destinations" className="scroll-mt-24 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          Popular Destinations
+          Popular destinations
         </h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Live catalog from our database — pick a city and start searching
-          journeys.
+          Cities travelers love to weave into multi-stop itineraries — start
+          planning and add them as stops.
         </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -51,16 +51,11 @@ export function DestinationRow({
                 <p className="line-clamp-2 text-sm text-muted-foreground">
                   {c.description ?? "Explore trips to this destination."}
                 </p>
-                {c.starting_price != null ? (
-                  <p className="text-sm font-semibold text-primary">
-                    From ${Number(c.starting_price).toFixed(0)}
-                  </p>
-                ) : null}
                 <Link
-                  href={`/journeys/search?to=${encodeURIComponent(c.name)}&from=Paris&departure=2026-09-01&passengers=1`}
+                  href={`/search?type=city&q=${encodeURIComponent(c.name)}`}
                   className={cn(buttonVariants({ size: "sm" }), "mt-1")}
                 >
-                  Explore
+                  Plan around {c.name}
                 </Link>
               </div>
             </article>
@@ -69,7 +64,7 @@ export function DestinationRow({
 
         {cities.length === 0 ? (
           <p className="mt-8 text-sm text-muted-foreground">
-            No destinations yet. Seed the catalog to populate this section.
+            No destinations available right now. Check back soon.
           </p>
         ) : null}
       </div>

@@ -212,7 +212,7 @@ export function ScheduleCalendar({
               : "Select a day"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Expandable day view of trips and activities from your database.
+            Expand a day to see your trips and planned activities.
           </p>
 
           {!selected ? (
