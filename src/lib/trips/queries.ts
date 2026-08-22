@@ -2,7 +2,14 @@ import { query } from "@/lib/db";
 
 export async function getOwnedTrip(tripId: string, userId: string) {
   const { rows } = await query(
-    `SELECT * FROM trips WHERE id = $1 AND user_id = $2`,
+    `SELECT
+       id, user_id, name, description, cover_photo,
+       to_char(start_date, 'YYYY-MM-DD') AS start_date,
+       to_char(end_date, 'YYYY-MM-DD') AS end_date,
+       start_point, end_point, is_public, share_slug,
+       budget_limit, is_featured, created_at, updated_at
+     FROM trips
+     WHERE id = $1 AND user_id = $2`,
     [tripId, userId]
   );
   return rows[0] ?? null;

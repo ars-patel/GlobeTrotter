@@ -1,16 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
-import { DeleteTripButton } from "@/components/trips/delete-trip-button";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  TripListCard,
+  type TripListItem,
+} from "@/components/trips/trip-list-card";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -18,75 +13,32 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { getCurrentUser } from "@/lib/auth/session";
 import { query } from "@/lib/db";
 import { cn } from "@/lib/utils";
-
-type TripRow = {
-  id: string;
-  name: string;
-  description: string | null;
-  start_date: string;
-  end_date: string;
-  start_point: string | null;
-  end_point: string | null;
-  destination_count: number;
-};
-
-function TripCard({ trip }: { trip: TripRow }) {
-  return (
-    <Card className="border-border shadow-none">
-      <CardHeader className="gap-2">
-        <CardTitle className="text-base">{trip.name}</CardTitle>
-        <CardDescription>
-          {String(trip.start_date).slice(0, 10)} – {String(trip.end_date).slice(0, 10)}
-          {trip.start_point || trip.end_point
-            ? ` · ${[trip.start_point, trip.end_point].filter(Boolean).join(" → ")}`
-            : ""}
-        </CardDescription>
-        <Badge variant="secondary">{trip.destination_count} destinations</Badge>
-      </CardHeader>
-      <CardFooter className="flex flex-wrap gap-2">
-        <Link
-          href={`/trips/${trip.id}/itinerary`}
-          className={cn(buttonVariants({ size: "sm" }))}
-        >
-          View
-        </Link>
-        <Link
-          href={`/trips/${trip.id}/builder`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-        >
-          Builder
-        </Link>
-        <Link
-          href={`/trips/${trip.id}/edit`}
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-        >
-          Edit
-        </Link>
-        <DeleteTripButton tripId={trip.id} />
-      </CardFooter>
-    </Card>
-  );
-}
 
 function Segment({
   title,
   trips,
 }: {
   title: string;
-  trips: TripRow[];
+  trips: TripListItem[];
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {trips.length}
+        </span>
+      </div>
       {trips.length === 0 ? (
-        <p className="text-sm text-muted-foreground">None</p>
+        <p className="text-sm text-muted-foreground">No trips in this group.</p>
       ) : (
         <div className="grid gap-3">
           {trips.map((t) => (
-            <TripCard key={t.id} trip={t} />
+            <TripListCard key={t.id} trip={t} />
           ))}
         </div>
       )}
@@ -99,21 +51,23 @@ export default async function TripsPage() {
   if (!user) redirect("/login");
 
   try {
-    const { rows } = await query<TripRow>(
+    const { rows } = await query<TripListItem>(
       `SELECT
-         t.id, t.name, t.description, t.start_date, t.end_date,
+         t.id, t.name, t.description,
+         to_char(t.start_date, 'YYYY-MM-DD') AS start_date,
+         to_char(t.end_date, 'YYYY-MM-DD') AS end_date,
          t.start_point, t.end_point,
          (SELECT COUNT(*)::int FROM trip_stops s WHERE s.trip_id = t.id) AS destination_count
        FROM trips t
        WHERE t.user_id = $1
-       ORDER BY t.start_date ASC`,
+       ORDER BY t.start_date ASC, t.created_at DESC`,
       [user.id]
     );
 
     const today = new Date().toISOString().slice(0, 10);
-    const ongoing: TripRow[] = [];
-    const upcoming: TripRow[] = [];
-    const completed: TripRow[] = [];
+    const ongoing: TripListItem[] = [];
+    const upcoming: TripListItem[] = [];
+    const completed: TripListItem[] = [];
     for (const trip of rows) {
       const start = String(trip.start_date).slice(0, 10);
       const end = String(trip.end_date).slice(0, 10);
@@ -125,12 +79,13 @@ export default async function TripsPage() {
     return (
       <div className="flex min-h-full flex-1 flex-col">
         <AppHeader user={user} />
-        <main className="mx-auto w-full max-w-3xl flex-1 space-y-10 px-6 py-10">
+        <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Your Trip History</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">My Trips</h1>
               <p className="text-sm text-muted-foreground">
-                Ongoing, upcoming, and completed plans
+                View, edit, or delete your travel plans · Ongoing, upcoming, and
+                completed
               </p>
             </div>
             <Link href="/trips/new" className={cn(buttonVariants())}>
@@ -151,11 +106,13 @@ export default async function TripsPage() {
               </Link>
             </Empty>
           ) : (
-            <>
+            <div className="space-y-8">
               <Segment title="Ongoing" trips={ongoing} />
+              <Separator />
               <Segment title="Upcoming" trips={upcoming} />
+              <Separator />
               <Segment title="Completed" trips={completed} />
-            </>
+            </div>
           )}
         </main>
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-user";
 import { getOwnedTrip } from "@/lib/trips/queries";
-import { createTripSchema } from "@/lib/trips/schemas";
+import { updateTripSchema } from "@/lib/trips/schemas";
 
 export const runtime = "nodejs";
 
@@ -25,8 +25,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!trip) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await request.json();
-  const parsed = createTripSchema.partial().safeParse({
+  const parsed = updateTripSchema.safeParse({
     ...body,
+    description: body.description === "" ? null : body.description,
+    cover_photo: body.cover_photo === "" ? null : body.cover_photo,
     budget_limit:
       body.budget_limit === "" || body.budget_limit == null
         ? null
@@ -42,26 +44,26 @@ export async function PATCH(request: Request, ctx: Ctx) {
   const d = parsed.data;
   const { rows } = await query(
     `UPDATE trips SET
-       name = COALESCE($1, name),
-       description = COALESCE($2, description),
-       cover_photo = COALESCE($3, cover_photo),
-       start_date = COALESCE($4, start_date),
-       end_date = COALESCE($5, end_date),
-       start_point = COALESCE($6, start_point),
-       end_point = COALESCE($7, end_point),
-       budget_limit = COALESCE($8, budget_limit),
+       name = $1,
+       description = $2,
+       cover_photo = $3,
+       start_date = $4,
+       end_date = $5,
+       start_point = $6,
+       end_point = $7,
+       budget_limit = $8,
        updated_at = NOW()
      WHERE id = $9 AND user_id = $10
      RETURNING *`,
     [
-      d.name ?? null,
-      d.description ?? null,
-      d.cover_photo ?? null,
-      d.start_date ?? null,
-      d.end_date ?? null,
-      d.start_point ?? null,
-      d.end_point ?? null,
-      d.budget_limit === undefined ? null : d.budget_limit,
+      d.name,
+      d.description?.trim() ? d.description : null,
+      d.cover_photo?.trim() ? d.cover_photo : null,
+      d.start_date,
+      d.end_date,
+      d.start_point,
+      d.end_point,
+      d.budget_limit,
       tripId,
       auth.user.id,
     ]
