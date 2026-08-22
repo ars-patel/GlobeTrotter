@@ -8,6 +8,7 @@ import {
   CompassIcon,
   Globe2Icon,
   LayoutDashboardIcon,
+  LogOutIcon,
   MapIcon,
   MessagesSquareIcon,
   SearchIcon,
@@ -28,7 +29,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { PublicUser } from "@/lib/auth/session";
 
@@ -186,19 +186,14 @@ export function AppSidebar({ user }: { user: PublicUser }) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
-              onClick={() => void logout()}
+            <SidebarMenuButton
+              tooltip="Log Out"
               disabled={loggingOut}
+              onClick={() => void logout()}
             >
-              {loggingOut ? <Spinner data-icon="inline-start" /> : null}
-              <span className="group-data-[collapsible=icon]:sr-only">
-                Log Out
-              </span>
-            </Button>
+              {loggingOut ? <Spinner /> : <LogOutIcon />}
+              <span>Log Out</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
