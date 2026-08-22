@@ -1,0 +1,167 @@
+// GlobeTrotter — relational schema for multi-city travel planning
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ActivityType {
+  SIGHTSEEING
+  FOOD
+  ADVENTURE
+  CULTURE
+  SHOPPING
+  RELAXATION
+  TRANSPORT
+  OTHER
+}
+
+enum BudgetCategory {
+  TRANSPORT
+  STAY
+  ACTIVITIES
+  MEALS
+  OTHER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  photoUrl     String?
+  language     String   @default("en")
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  trips              Trip[]
+  savedDestinations  SavedDestination[]
+}
+
+model City {
+  id         String   @id @default(cuid())
+  name       String
+  country    String
+  region     String?
+  costIndex  Float    @default(1.0)
+  popularity Int      @default(0)
+  imageUrl   String?
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime @default(now())
+
+  stops             TripStop[]
+  activities        Activity[]
+  savedByUsers      SavedDestination[]
+
+  @@unique([name, country])
+  @@index([country])
+  @@index([popularity])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  cityId      String
+  name        String
+  description String?
+  type        ActivityType @default(OTHER)
+  cost        Decimal      @default(0) @db.Decimal(10, 2)
+  durationHrs Float?
+  imageUrl    String?
+  createdAt   DateTime     @default(now())
+
+  city         City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  tripActivities TripActivity[]
+
+  @@index([cityId])
+  @@index([type])
+}
+
+model Trip {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  coverPhoto  String?
+  startDate   DateTime
+  endDate     DateTime
+  isPublic    Boolean   @default(false)
+  shareSlug   String?   @unique
+  budgetLimit Decimal?  @db.Decimal(12, 2)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops  TripStop[]
+  costs  TripCost[]
+
+  @@index([userId])
+  @@index([shareSlug])
+}
+
+model TripStop {
+  id        String   @id @default(cuid())
+  tripId    String
+  cityId    String
+  startDate DateTime
+  endDate   DateTime
+  order     Int
+  notes     String?
+
+  trip       Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  city       City           @relation(fields: [cityId], references: [id])
+  activities TripActivity[]
+
+  @@index([tripId])
+  @@unique([tripId, order])
+}
+
+model TripActivity {
+  id         String   @id @default(cuid())
+  stopId     String
+  activityId String
+  dayDate    DateTime
+  startTime  String?
+  order      Int      @default(0)
+  notes      String?
+  customCost Decimal? @db.Decimal(10, 2)
+
+  stop     TripStop @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  activity Activity @relation(fields: [activityId], references: [id])
+
+  @@index([stopId])
+}
+
+model TripCost {
+  id       String         @id @default(cuid())
+  tripId   String
+  category BudgetCategory
+  label    String?
+  amount   Decimal        @db.Decimal(12, 2)
+  dayDate  DateTime?
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model SavedDestination {
+  id     String @id @default(cuid())
+  userId String
+  cityId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cityId])
+}
