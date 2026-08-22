@@ -121,7 +121,7 @@ export default async function SchedulePage({ searchParams }: Props) {
               {trips.map((t) => (
                 <li key={t.id}>
                   <a
-                    href={`/trips/${t.id}/itinerary`}
+                    href={`/trips/${t.id}/calendar`}
                     className="underline-offset-4 hover:underline"
                   >
                     {t.name}

@@ -303,13 +303,25 @@ export function ItineraryView({
           </div>
 
           <div className="space-y-3 rounded-lg border border-border p-4">
-            <h3 className="text-sm font-semibold">
-              {detailDay
-                ? `Activities on ${detailDay}`
-                : selectedDay
-                  ? `No activities on ${selectedDay}`
-                  : "Select a highlighted day"}
-            </h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold">
+                {detailDay
+                  ? `Activities on ${detailDay}`
+                  : selectedDay
+                    ? `No activities on ${selectedDay}`
+                    : "Select a highlighted day"}
+              </h3>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  router.push(`/trips/${tripId}/calendar`)
+                }
+              >
+                Open full timeline
+              </Button>
+            </div>
             {detailDay ? (
               <ul className="space-y-2">
                 {(byDay.get(detailDay) ?? []).map((a) => {
