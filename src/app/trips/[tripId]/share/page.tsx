@@ -25,8 +25,10 @@ export default async function TripSharePage({ params }: Props) {
         </div>
         <ShareTripPanel
           tripId={tripId}
+          tripName={String(trip.name)}
           initialPublic={Boolean(trip.is_public)}
           initialSlug={trip.share_slug}
+          appOrigin={(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "")}
         />
       </main>
     </div>

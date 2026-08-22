@@ -9,6 +9,7 @@ const PUBLIC_PREFIXES = [
   "/forgot-password",
   "/reset-password",
   "/share",
+  "/api/share",
   "/api/auth",
   "/api/health",
 ];

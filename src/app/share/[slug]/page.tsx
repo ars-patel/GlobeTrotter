@@ -1,92 +1,107 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { CopyTripButton } from "@/components/trips/copy-trip-button";
+import { PublicItineraryView } from "@/components/trips/public-itinerary-view";
 import { getCurrentUser } from "@/lib/auth/session";
 import { query } from "@/lib/db";
 import { getTripItinerary } from "@/lib/trips/queries";
-import { cn } from "@/lib/utils";
+import { toDateString } from "@/lib/dates";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export default async function PublicSharePage({ params }: Props) {
-  const { slug } = await params;
-  const user = await getCurrentUser();
+function appOrigin() {
+  return (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
+    /\/$/,
+    ""
+  );
+}
+
+async function loadPublicTrip(slug: string) {
   const { rows } = await query(
-    `SELECT id, name, description, start_date, end_date, start_point, end_point, cover_photo
+    `SELECT
+       id, name, description, cover_photo,
+       to_char(start_date, 'YYYY-MM-DD') AS start_date,
+       to_char(end_date, 'YYYY-MM-DD') AS end_date,
+       start_point, end_point, budget_limit, share_slug
      FROM trips
      WHERE share_slug = $1 AND is_public = TRUE`,
     [slug]
   );
-  const trip = rows[0];
+  return rows[0] ?? null;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const trip = await loadPublicTrip(slug);
+  if (!trip) return { title: "Shared trip not found" };
+  const title = `${trip.name} · Shared itinerary`;
+  const description =
+    (trip.description && String(trip.description).slice(0, 160)) ||
+    `Public GlobeTrotter itinerary · ${toDateString(trip.start_date)} – ${toDateString(trip.end_date)}`;
+  const url = `${appOrigin()}/share/${slug}`;
+  const images = trip.cover_photo
+    ? [{ url: String(trip.cover_photo) }]
+    : undefined;
+  return {
+    title,
+    description,
+    openGraph: { title, description, url, images, type: "website" },
+    twitter: { card: "summary_large_image", title, description, images },
+  };
+}
+
+export default async function PublicSharePage({ params }: Props) {
+  const { slug } = await params;
+  const user = await getCurrentUser();
+  const trip = await loadPublicTrip(slug);
   if (!trip) notFound();
 
-  const { stops, activities } = await getTripItinerary(trip.id);
+  const { stops, activities } = await getTripItinerary(String(trip.id));
+  const mappedStops = stops.map((s) => ({
+    id: String(s.id),
+    city_name: String(s.city_name),
+    country: String(s.country ?? ""),
+    start_date: toDateString(s.start_date),
+    end_date: toDateString(s.end_date),
+    stop_order: Number(s.stop_order),
+  }));
+  const mappedActivities = activities.map((a) => ({
+    id: String(a.id),
+    stop_id: String(a.stop_id),
+    activity_name: String(a.activity_name),
+    day_date: toDateString(a.day_date),
+    start_time: a.start_time ? String(a.start_time) : null,
+    end_time: a.end_time ? String(a.end_time) : null,
+    type: a.type ? String(a.type) : null,
+    cost: Number(a.custom_cost ?? a.cost ?? 0),
+  }));
+  const summary = {
+    stopCount: mappedStops.length,
+    activityCount: mappedActivities.length,
+    estimatedCost: mappedActivities.reduce((s, a) => s + a.cost, 0),
+    cities: [...new Set(mappedStops.map((s) => s.city_name))],
+  };
+
+  const shareUrl = `${appOrigin()}/share/${slug}`;
 
   return (
-    <div className="mx-auto min-h-full w-full max-w-3xl px-6 py-10">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        Shared itinerary
-      </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">{trip.name}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {String(trip.start_date).slice(0, 10)} – {String(trip.end_date).slice(0, 10)}
-        {trip.start_point || trip.end_point
-          ? ` · ${[trip.start_point, trip.end_point].filter(Boolean).join(" → ")}`
-          : ""}
-      </p>
-      {trip.description ? (
-        <p className="mt-4 text-sm leading-relaxed">{trip.description}</p>
-      ) : null}
-
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        {user ? (
-          <CopyTripButton slug={slug} />
-        ) : (
-          <>
-            <Link href={`/signup?next=/share/${slug}`} className={cn(buttonVariants())}>
-              Sign up to copy
-            </Link>
-            <Link
-              href={`/login?next=/share/${slug}`}
-              className={cn(buttonVariants({ variant: "outline" }))}
-            >
-              Log in
-            </Link>
-          </>
-        )}
-      </div>
-
-      <div className="mt-10 space-y-8">
-        {stops.map((s) => (
-          <section key={s.id} className="space-y-3">
-            <h2 className="text-lg font-semibold">{s.city_name}</h2>
-            <Separator />
-            <ul className="space-y-2">
-              {activities
-                .filter((a) => a.stop_id === s.id)
-                .map((a) => (
-                  <li
-                    key={a.id}
-                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
-                  >
-                    <span>
-                      {a.activity_name}
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {String(a.day_date).slice(0, 10)}
-                      </span>
-                    </span>
-                    <Badge variant="outline">
-                      ${Number(a.custom_cost ?? a.cost ?? 0).toFixed(2)}
-                    </Badge>
-                  </li>
-                ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-    </div>
+    <PublicItineraryView
+      slug={slug}
+      shareUrl={shareUrl}
+      isLoggedIn={Boolean(user)}
+      trip={{
+        name: String(trip.name),
+        description: trip.description ? String(trip.description) : null,
+        cover_photo: trip.cover_photo ? String(trip.cover_photo) : null,
+        start_date: toDateString(trip.start_date),
+        end_date: toDateString(trip.end_date),
+        start_point: trip.start_point ? String(trip.start_point) : null,
+        end_point: trip.end_point ? String(trip.end_point) : null,
+        budget_limit:
+          trip.budget_limit == null ? null : Number(trip.budget_limit),
+      }}
+      stops={mappedStops}
+      activities={mappedActivities}
+      summary={summary}
+    />
   );
 }

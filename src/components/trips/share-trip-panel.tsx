@@ -1,31 +1,45 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
+import { SocialShareButtons } from "@/components/trips/social-share-buttons";
+import { cn } from "@/lib/utils";
 
 export function ShareTripPanel({
   tripId,
+  tripName,
   initialPublic,
   initialSlug,
+  appOrigin,
 }: {
   tripId: string;
+  tripName: string;
   initialPublic: boolean;
   initialSlug: string | null;
+  appOrigin: string;
 }) {
+  const origin = appOrigin.replace(/\/$/, "");
   const [isPublic, setIsPublic] = useState(initialPublic);
-  const [shareUrl, setShareUrl] = useState(
-    initialSlug
-      ? `${typeof window !== "undefined" ? window.location.origin : ""}/share/${initialSlug}`
-      : ""
-  );
+  const [slug, setSlug] = useState(initialSlug);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clientOrigin, setClientOrigin] = useState(origin);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setClientOrigin(window.location.origin);
+    }
+  }, []);
+
+  const shareUrl =
+    isPublic && slug ? `${clientOrigin}/share/${slug}` : "";
 
   async function toggle(next: boolean) {
     setLoading(true);
@@ -40,7 +54,7 @@ export function ShareTripPanel({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Share update failed");
       setIsPublic(Boolean(data.trip?.is_public));
-      setShareUrl(data.shareUrl ?? "");
+      setSlug(data.trip?.share_slug ?? null);
       setMessage(next ? "Trip is public" : "Trip is private");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
@@ -55,14 +69,15 @@ export function ShareTripPanel({
         <div>
           <Label htmlFor="public">Public sharing</Label>
           <p className="text-xs text-muted-foreground">
-            Anyone with the link can view a read-only itinerary
+            Anyone with the link can view a read-only itinerary and copy the
+            trip
           </p>
         </div>
         <Switch
           id="public"
           checked={isPublic}
           disabled={loading}
-          onCheckedChange={(v) => toggle(Boolean(v))}
+          onCheckedChange={(v) => void toggle(Boolean(v))}
         />
       </div>
       {loading ? <Spinner /> : null}
@@ -77,20 +92,37 @@ export function ShareTripPanel({
         </Alert>
       ) : null}
       {shareUrl ? (
-        <div className="space-y-2">
-          <Label htmlFor="url">Public URL</Label>
-          <div className="flex gap-2">
-            <Input id="url" readOnly value={shareUrl} />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigator.clipboard.writeText(shareUrl)}
-            >
-              Copy
-            </Button>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="url">Public URL</Label>
+            <div className="flex flex-wrap gap-2">
+              <Input id="url" readOnly value={shareUrl} className="min-w-0 flex-1" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void navigator.clipboard.writeText(shareUrl)}
+              >
+                Copy
+              </Button>
+              <Link
+                href={`/share/${slug}`}
+                target="_blank"
+                className={cn(buttonVariants({ variant: "secondary" }))}
+              >
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Social media</Label>
+            <SocialShareButtons url={shareUrl} title={tripName} />
           </div>
         </div>
-      ) : null}
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Turn on public sharing to get a link and social share buttons.
+        </p>
+      )}
     </div>
   );
 }

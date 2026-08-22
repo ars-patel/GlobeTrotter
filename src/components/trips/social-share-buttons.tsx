@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  FacebookIcon,
-  LinkIcon,
-  MailIcon,
-  Share2Icon,
-  TwitterIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LinkIcon, MailIcon, Share2Icon } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function buildLinks(url: string, title: string) {
@@ -33,6 +27,7 @@ export function SocialShareButtons({
 }) {
   const [copied, setCopied] = useState(false);
   const links = buildLinks(url, title);
+  const linkClass = cn(buttonVariants({ variant: "outline", size: "sm" }));
 
   async function copyLink() {
     try {
@@ -47,10 +42,14 @@ export function SocialShareButtons({
   async function nativeShare() {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title, url, text: `Check out this trip: ${title}` });
+        await navigator.share({
+          title,
+          url,
+          text: `Check out this trip: ${title}`,
+        });
         return;
       } catch {
-        /* user cancelled */
+        /* cancelled */
       }
     }
     await copyLink();
@@ -58,39 +57,52 @@ export function SocialShareButtons({
 
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
-      <Button type="button" size="sm" variant="outline" onClick={() => void nativeShare()}>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => void nativeShare()}
+      >
         <Share2Icon data-icon="inline-start" />
         Share
       </Button>
-      <Button type="button" size="sm" variant="outline" onClick={() => void copyLink()}>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => void copyLink()}
+      >
         <LinkIcon data-icon="inline-start" />
         {copied ? "Copied" : "Copy link"}
       </Button>
-      <Button type="button" size="sm" variant="outline" render={<a href={links.x} target="_blank" rel="noopener noreferrer" />}>
-        <TwitterIcon data-icon="inline-start" />
-        X
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        render={<a href={links.facebook} target="_blank" rel="noopener noreferrer" />}
+      <a
+        href={links.x}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClass}
       >
-        <FacebookIcon data-icon="inline-start" />
+        X / Twitter
+      </a>
+      <a
+        href={links.facebook}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClass}
+      >
         Facebook
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        render={<a href={links.whatsapp} target="_blank" rel="noopener noreferrer" />}
+      </a>
+      <a
+        href={links.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClass}
       >
         WhatsApp
-      </Button>
-      <Button type="button" size="sm" variant="outline" render={<a href={links.email} />}>
-        <MailIcon data-icon="inline-start" />
+      </a>
+      <a href={links.email} className={linkClass}>
+        <MailIcon data-icon="inline-start" className="size-3.5" />
         Email
-      </Button>
+      </a>
     </div>
   );
 }
