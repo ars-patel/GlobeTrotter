@@ -1,7 +1,28 @@
 import { query } from "@/lib/db";
 
-export async function getOwnedTrip(tripId: string, userId: string) {
-  const { rows } = await query(
+export type OwnedTrip = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  cover_photo: string | null;
+  start_date: string;
+  end_date: string;
+  start_point: string | null;
+  end_point: string | null;
+  is_public: boolean;
+  share_slug: string | null;
+  budget_limit: string | number | null;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function getOwnedTrip(
+  tripId: string,
+  userId: string
+): Promise<OwnedTrip | null> {
+  const { rows } = await query<OwnedTrip>(
     `SELECT
        id, user_id, name, description, cover_photo,
        to_char(start_date, 'YYYY-MM-DD') AS start_date,
