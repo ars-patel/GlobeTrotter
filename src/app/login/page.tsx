@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { AuthBrandHeader } from "@/components/auth/auth-brand-header";
 import { LoginForm } from "@/components/auth/login-form";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LoginPage() {
   return (
@@ -10,7 +12,9 @@ export default function LoginPage() {
           <AuthBrandHeader subtitle="Sign in to manage your trips" />
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <LoginForm />
+          </Suspense>
         </CardContent>
       </Card>
     </div>

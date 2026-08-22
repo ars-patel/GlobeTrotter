@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Globe2 } from "lucide-react";
 
 export function AuthBrandHeader({
@@ -19,11 +18,6 @@ export function AuthBrandHeader({
       {subtitle ? (
         <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       ) : null}
-      <p className="mt-3 text-xs text-muted-foreground">
-        <Link href="/" className="underline-offset-4 hover:underline">
-          Back to home
-        </Link>
-      </p>
     </div>
   );
 }

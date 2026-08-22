@@ -19,7 +19,7 @@ export const loginSchema = z.object({
   identifier: z
     .string()
     .trim()
-    .min(1, "Username or email is required")
+    .min(1, "Email or username is required")
     .max(255),
   password: z.string().min(1, "Password is required").max(128),
 });

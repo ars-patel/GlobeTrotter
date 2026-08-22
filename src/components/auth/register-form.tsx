@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { PasswordField } from "@/components/auth/password-field";
 import { signupSchema } from "@/lib/auth/schemas";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 type FormState = {
   first_name: string;
@@ -38,9 +44,26 @@ const initial: FormState = {
   confirm_password: "",
 };
 
+type FieldKey =
+  | "first_name"
+  | "last_name"
+  | "email"
+  | "password"
+  | "confirm_password"
+  | "username";
+
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = useMemo(
+    () => safeNextPath(searchParams.get("next")),
+    [searchParams]
+  );
+
   const [form, setForm] = useState<FormState>(initial);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>(
+    {}
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -51,8 +74,10 @@ export function RegisterForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     if (form.password !== form.confirm_password) {
+      setFieldErrors({ confirm_password: "Passwords do not match" });
       setError("Passwords do not match");
       return;
     }
@@ -70,6 +95,20 @@ export function RegisterForm() {
     });
 
     if (!parsed.success) {
+      const nextErr: Partial<Record<FieldKey, string>> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]) as FieldKey;
+        if (
+          key === "first_name" ||
+          key === "last_name" ||
+          key === "email" ||
+          key === "password" ||
+          key === "username"
+        ) {
+          nextErr[key] = issue.message;
+        }
+      }
+      setFieldErrors(nextErr);
       setError(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
@@ -86,7 +125,7 @@ export function RegisterForm() {
         setError(data.error ?? "Unable to create account");
         return;
       }
-      router.push("/discover");
+      router.push(nextPath);
       router.refresh();
     } catch {
       setError("Unable to create account. Check your connection and try again.");
@@ -96,36 +135,48 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="first_name">First Name</Label>
+      <FieldGroup className="grid gap-4 sm:grid-cols-2">
+        <Field data-invalid={Boolean(fieldErrors.first_name) || undefined}>
+          <FieldLabel htmlFor="first_name">First name *</FieldLabel>
           <Input
             id="first_name"
             value={form.first_name}
             onChange={(e) => setField("first_name", e.target.value)}
             disabled={loading}
             autoComplete="given-name"
+            required
+            aria-invalid={Boolean(fieldErrors.first_name)}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="last_name">Last Name</Label>
+          {fieldErrors.first_name ? (
+            <FieldError>{fieldErrors.first_name}</FieldError>
+          ) : null}
+        </Field>
+
+        <Field data-invalid={Boolean(fieldErrors.last_name) || undefined}>
+          <FieldLabel htmlFor="last_name">Last name *</FieldLabel>
           <Input
             id="last_name"
             value={form.last_name}
             onChange={(e) => setField("last_name", e.target.value)}
             disabled={loading}
             autoComplete="family-name"
+            required
+            aria-invalid={Boolean(fieldErrors.last_name)}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email Address</Label>
+          {fieldErrors.last_name ? (
+            <FieldError>{fieldErrors.last_name}</FieldError>
+          ) : null}
+        </Field>
+
+        <Field data-invalid={Boolean(fieldErrors.email) || undefined}>
+          <FieldLabel htmlFor="email">Email *</FieldLabel>
           <Input
             id="email"
             type="email"
@@ -133,10 +184,15 @@ export function RegisterForm() {
             onChange={(e) => setField("email", e.target.value)}
             disabled={loading}
             autoComplete="email"
+            required
+            aria-invalid={Boolean(fieldErrors.email)}
+            placeholder="you@example.com"
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number</Label>
+          {fieldErrors.email ? <FieldError>{fieldErrors.email}</FieldError> : null}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="phone">Phone number</FieldLabel>
           <Input
             id="phone"
             type="tel"
@@ -145,9 +201,10 @@ export function RegisterForm() {
             disabled={loading}
             autoComplete="tel"
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="home_city">City</Label>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="home_city">City</FieldLabel>
           <Input
             id="home_city"
             value={form.home_city}
@@ -155,9 +212,10 @@ export function RegisterForm() {
             disabled={loading}
             autoComplete="address-level2"
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="home_country">Country</Label>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="home_country">Country</FieldLabel>
           <Input
             id="home_country"
             value={form.home_country}
@@ -165,9 +223,13 @@ export function RegisterForm() {
             disabled={loading}
             autoComplete="country-name"
           />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="username">Username (optional)</Label>
+        </Field>
+
+        <Field
+          className="sm:col-span-2"
+          data-invalid={Boolean(fieldErrors.username) || undefined}
+        >
+          <FieldLabel htmlFor="username">Username (optional)</FieldLabel>
           <Input
             id="username"
             value={form.username}
@@ -175,10 +237,15 @@ export function RegisterForm() {
             disabled={loading}
             autoComplete="username"
             placeholder="Defaults from email if empty"
+            aria-invalid={Boolean(fieldErrors.username)}
           />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="additional_info">Additional Information</Label>
+          {fieldErrors.username ? (
+            <FieldError>{fieldErrors.username}</FieldError>
+          ) : null}
+        </Field>
+
+        <Field className="sm:col-span-2">
+          <FieldLabel htmlFor="additional_info">Additional information</FieldLabel>
           <Textarea
             id="additional_info"
             value={form.additional_info}
@@ -186,19 +253,28 @@ export function RegisterForm() {
             disabled={loading}
             rows={3}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+        </Field>
+
+        <Field data-invalid={Boolean(fieldErrors.password) || undefined}>
+          <FieldLabel htmlFor="password">Password *</FieldLabel>
           <PasswordField
             id="password"
             value={form.password}
             onChange={(v) => setField("password", v)}
             disabled={loading}
             autoComplete="new-password"
+            aria-invalid={Boolean(fieldErrors.password)}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm_password">Confirm Password</Label>
+          <p className="text-xs text-muted-foreground">At least 8 characters</p>
+          {fieldErrors.password ? (
+            <FieldError>{fieldErrors.password}</FieldError>
+          ) : null}
+        </Field>
+
+        <Field
+          data-invalid={Boolean(fieldErrors.confirm_password) || undefined}
+        >
+          <FieldLabel htmlFor="confirm_password">Confirm password *</FieldLabel>
           <PasswordField
             id="confirm_password"
             name="confirm_password"
@@ -206,9 +282,13 @@ export function RegisterForm() {
             onChange={(v) => setField("confirm_password", v)}
             disabled={loading}
             autoComplete="new-password"
+            aria-invalid={Boolean(fieldErrors.confirm_password)}
           />
-        </div>
-      </div>
+          {fieldErrors.confirm_password ? (
+            <FieldError>{fieldErrors.confirm_password}</FieldError>
+          ) : null}
+        </Field>
+      </FieldGroup>
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? (
@@ -217,13 +297,20 @@ export function RegisterForm() {
             Creating account…
           </>
         ) : (
-          "Register now"
+          "Sign up"
         )}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="underline underline-offset-4">
+        <Link
+          href={
+            nextPath !== "/discover"
+              ? `/login?next=${encodeURIComponent(nextPath)}`
+              : "/login"
+          }
+          className="underline underline-offset-4"
+        >
           Login
         </Link>
       </p>

@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { AuthBrandHeader } from "@/components/auth/auth-brand-header";
 import { RegisterForm } from "@/components/auth/register-form";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SignupPage() {
   return (
@@ -10,7 +12,9 @@ export default function SignupPage() {
           <AuthBrandHeader subtitle="Create your GlobeTrotter account" />
         </CardHeader>
         <CardContent>
-          <RegisterForm />
+          <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+            <RegisterForm />
+          </Suspense>
         </CardContent>
       </Card>
     </div>

@@ -43,7 +43,20 @@ export function middleware(request: NextRequest) {
       pathname === "/forgot-password")
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/discover";
+    const next = request.nextUrl.searchParams.get("next");
+    if (
+      next &&
+      next.startsWith("/") &&
+      !next.startsWith("//") &&
+      !next.startsWith("/login") &&
+      !next.startsWith("/signup")
+    ) {
+      url.pathname = next;
+      url.search = "";
+    } else {
+      url.pathname = "/discover";
+      url.search = "";
+    }
     return NextResponse.redirect(url);
   }
 
