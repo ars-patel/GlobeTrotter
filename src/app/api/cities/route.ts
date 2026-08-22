@@ -14,6 +14,10 @@ export async function GET(request: NextRequest) {
     const country = sp.get("country")?.trim();
     const region = sp.get("region")?.trim();
     const sort = sp.get("sort") ?? "popularity";
+    const limitRaw = Number(sp.get("limit") ?? 50);
+    const limit = Number.isFinite(limitRaw)
+      ? Math.min(Math.max(limitRaw, 1), 100)
+      : 50;
 
     const clauses: string[] = [];
     const params: unknown[] = [];
@@ -26,11 +30,11 @@ export async function GET(request: NextRequest) {
     }
     if (country) {
       params.push(country);
-      clauses.push(`country ILIKE $${params.length}`);
+      clauses.push(`country = $${params.length}`);
     }
     if (region) {
       params.push(region);
-      clauses.push(`region ILIKE $${params.length}`);
+      clauses.push(`region = $${params.length}`);
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
@@ -38,25 +42,40 @@ export async function GET(request: NextRequest) {
       sort === "name"
         ? "name ASC"
         : sort === "cost_index"
-          ? "cost_index ASC"
+          ? "cost_index ASC, name ASC"
           : "popularity DESC, name ASC";
 
+    params.push(limit);
     const { rows } = await query(
       `SELECT id, name, country, region, cost_index, popularity, image_url, latitude, longitude
        FROM cities
        ${where}
        ORDER BY ${order}
-       LIMIT 50`,
+       LIMIT $${params.length}`,
       params
     );
 
-    const meta = await query<{ country: string }>(
+    const countries = await query<{ country: string }>(
       `SELECT DISTINCT country FROM cities ORDER BY country ASC`
+    );
+
+    const regionParams: unknown[] = [];
+    let regionWhere = `WHERE region IS NOT NULL AND TRIM(region) <> ''`;
+    if (country) {
+      regionParams.push(country);
+      regionWhere += ` AND country = $1`;
+    }
+    const regions = await query<{ region: string }>(
+      `SELECT DISTINCT region FROM cities ${regionWhere} ORDER BY region ASC`,
+      regionParams
     );
 
     return NextResponse.json({
       cities: rows,
-      meta: { countries: meta.rows.map((r) => r.country) },
+      meta: {
+        countries: countries.rows.map((r) => r.country),
+        regions: regions.rows.map((r) => r.region),
+      },
     });
   } catch (error) {
     const message =

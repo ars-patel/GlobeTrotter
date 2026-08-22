@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -8,7 +9,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -21,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
 type City = { id: string; name: string; country: string };
 type Stop = {
@@ -395,18 +397,12 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
                         ))}
                       </ul>
                     )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      disabled={busy}
-                      onClick={() => {
-                        setSelectedStopId(s.id);
-                        setDayDate(s.start_date);
-                      }}
+                    <Link
+                      href={`/trips/${tripId}/activities?stopId=${encodeURIComponent(s.id)}`}
+                      className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}
                     >
                       Assign activity
-                    </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               );

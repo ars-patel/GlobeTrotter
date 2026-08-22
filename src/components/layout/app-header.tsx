@@ -11,11 +11,17 @@ import type { PublicUser } from "@/lib/auth/session";
 
 const NAV = [
   { href: "/discover", label: "Discover" },
+  { href: "/search?type=city", label: "Search" },
   { href: "/trips", label: "Trips" },
   { href: "/schedule", label: "Schedule" },
   { href: "/community", label: "Community" },
   { href: "/profile", label: "User Profile" },
 ] as const;
+
+function navActive(pathname: string, href: string) {
+  const base = href.split("?")[0] ?? href;
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
 
 type AppHeaderProps = {
   user: PublicUser | null;
@@ -50,8 +56,7 @@ export function AppHeader({ user }: AppHeaderProps) {
         {user ? (
           <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {NAV.map((item) => {
-              const active =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active = navActive(pathname, item.href);
               return (
                 <Link
                   key={item.href}
@@ -101,8 +106,7 @@ export function AppHeader({ user }: AppHeaderProps) {
       {user ? (
         <nav className="flex gap-1 overflow-x-auto border-t border-border px-4 py-1 md:hidden">
           {NAV.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = navActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
