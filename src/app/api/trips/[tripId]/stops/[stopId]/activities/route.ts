@@ -3,6 +3,7 @@ import { z } from "zod";
 import { query } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-user";
 import { getOwnedTrip } from "@/lib/trips/queries";
+import { toDateString } from "@/lib/dates";
 
 export const runtime = "nodejs";
 
@@ -46,8 +47,8 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   }
 
   const day = parsed.data.day_date;
-  const stopStart = String(stop.start_date).slice(0, 10);
-  const stopEnd = String(stop.end_date).slice(0, 10);
+  const stopStart = toDateString(stop.start_date);
+  const stopEnd = toDateString(stop.end_date);
   if (day < stopStart || day > stopEnd) {
     return NextResponse.json(
       { error: "Activity day must fall within the stop dates" },

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { query } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-user";
 import { getOwnedTrip } from "@/lib/trips/queries";
+import { toDateString } from "@/lib/dates";
 
 export const runtime = "nodejs";
 
@@ -53,8 +54,8 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     );
   }
 
-  const tripStart = String(trip.start_date).slice(0, 10);
-  const tripEnd = String(trip.end_date).slice(0, 10);
+  const tripStart = toDateString(trip.start_date);
+  const tripEnd = toDateString(trip.end_date);
   if (parsed.data.start_date < tripStart || parsed.data.end_date > tripEnd) {
     return NextResponse.json(
       { error: "Stop dates must fall within the trip date range" },

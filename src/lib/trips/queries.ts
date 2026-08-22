@@ -18,7 +18,10 @@ export async function getOwnedTrip(tripId: string, userId: string) {
 export async function getTripItinerary(tripId: string) {
   const stops = await query(
     `SELECT
-       s.id, s.trip_id, s.city_id, s.start_date, s.end_date, s.stop_order, s.notes,
+       s.id, s.trip_id, s.city_id,
+       to_char(s.start_date, 'YYYY-MM-DD') AS start_date,
+       to_char(s.end_date, 'YYYY-MM-DD') AS end_date,
+       s.stop_order, s.notes,
        c.name AS city_name, c.country, c.latitude, c.longitude
      FROM trip_stops s
      JOIN cities c ON c.id = s.city_id
@@ -29,7 +32,9 @@ export async function getTripItinerary(tripId: string) {
 
   const activities = await query(
     `SELECT
-       ta.id, ta.stop_id, ta.activity_id, ta.day_date, ta.start_time, ta.end_time,
+       ta.id, ta.stop_id, ta.activity_id,
+       to_char(ta.day_date, 'YYYY-MM-DD') AS day_date,
+       ta.start_time, ta.end_time,
        ta.act_order, ta.notes, ta.custom_cost, ta.is_done,
        a.name AS activity_name, a.description, a.type, a.cost, a.duration_hrs, a.image_url
      FROM trip_activities ta

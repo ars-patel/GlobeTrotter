@@ -1,13 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 
 type City = { id: string; name: string; country: string };
 type Stop = {
@@ -19,7 +32,7 @@ type Stop = {
   end_date: string;
   stop_order: number;
 };
-type Activity = {
+type CatalogActivity = {
   id: string;
   name: string;
   description: string | null;
@@ -46,7 +59,7 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
   const [stops, setStops] = useState<Stop[]>([]);
   const [activities, setActivities] = useState<TripActivity[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [cityOptions, setCityOptions] = useState<Activity[]>([]);
+  const [cityOptions, setCityOptions] = useState<CatalogActivity[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,14 +72,30 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showAddStop, setShowAddStop] = useState(false);
 
   const reload = useCallback(async () => {
     const res = await fetch(`/api/trips/${tripId}/itinerary`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Failed to load itinerary");
-    setTrip(data.trip);
-    setStops(data.stops ?? []);
-    setActivities(data.activities ?? []);
+    setTrip({
+      name: data.trip.name,
+      start_date: String(data.trip.start_date).slice(0, 10),
+      end_date: String(data.trip.end_date).slice(0, 10),
+    });
+    setStops(
+      (data.stops ?? []).map((s: Stop) => ({
+        ...s,
+        start_date: String(s.start_date).slice(0, 10),
+        end_date: String(s.end_date).slice(0, 10),
+      }))
+    );
+    setActivities(
+      (data.activities ?? []).map((a: TripActivity) => ({
+        ...a,
+        day_date: String(a.day_date).slice(0, 10),
+      }))
+    );
   }, [tripId]);
 
   useEffect(() => {
@@ -74,7 +103,7 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
       try {
         setLoading(true);
         await reload();
-        const citiesRes = await fetch("/api/cities");
+        const citiesRes = await fetch("/api/cities?limit=100");
         const citiesData = await citiesRes.json();
         setCities(citiesData.cities ?? []);
       } catch (e) {
@@ -86,6 +115,12 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
   }, [reload]);
 
   useEffect(() => {
+    if (!trip) return;
+    if (!stopStart) setStopStart(trip.start_date);
+    if (!stopEnd) setStopEnd(trip.end_date);
+  }, [trip, stopStart, stopEnd]);
+
+  useEffect(() => {
     const stop = stops.find((s) => s.id === selectedStopId);
     if (!stop) {
       setCityOptions([]);
@@ -95,8 +130,9 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
       const res = await fetch(`/api/activities?cityId=${stop.city_id}`);
       const data = await res.json();
       setCityOptions(data.activities ?? []);
+      if (!dayDate) setDayDate(stop.start_date);
     })();
-  }, [selectedStopId, stops]);
+  }, [selectedStopId, stops, dayDate]);
 
   async function addStop(e: React.FormEvent) {
     e.preventDefault();
@@ -115,9 +151,66 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to add stop");
       setCityId("");
+      setShowAddStop(false);
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add stop");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteStop(stopId: string, cityName: string) {
+    if (
+      !window.confirm(
+        `Remove ${cityName} from this trip? Activities on this stop will also be deleted.`
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/trips/${tripId}/stops/${stopId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to delete stop");
+      if (selectedStopId === stopId) setSelectedStopId("");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete stop");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function moveStop(stopId: string, direction: "up" | "down") {
+    const index = stops.findIndex((s) => s.id === stopId);
+    if (index < 0) return;
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= stops.length) return;
+
+    const next = [...stops];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    const stop_ids = next.map((s) => s.id);
+
+    setBusy(true);
+    setError(null);
+    setStops(next.map((s, i) => ({ ...s, stop_order: i + 1 })));
+    try {
+      const res = await fetch(`/api/trips/${tripId}/stops/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stop_ids }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to reorder cities");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reorder");
+      await reload();
     } finally {
       setBusy(false);
     }
@@ -152,6 +245,24 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
     }
   }
 
+  async function removeActivity(stopId: string, activityRowId: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/trips/${tripId}/stops/${stopId}/activities/${activityRowId}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to remove activity");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove activity");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -173,125 +284,294 @@ export function ItineraryBuilder({ tripId }: { tripId: string }) {
           {trip?.name ?? "Itinerary Builder"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Trip dates: {String(trip?.start_date).slice(0, 10)} –{" "}
-          {String(trip?.end_date).slice(0, 10)}
+          Add cities, set stop dates, assign activities, and reorder the route.
+          Trip window: {trip?.start_date} – {trip?.end_date}
         </p>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Stops</h2>
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Cities / stops</h2>
+            <p className="text-sm text-muted-foreground">
+              Use arrows to reorder cities in your itinerary
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => setShowAddStop((v) => !v)}
+            disabled={busy}
+          >
+            {showAddStop ? "Cancel" : "Add Stop"}
+          </Button>
+        </div>
+
         {stops.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No stops yet. Add a city.</p>
+          <p className="text-sm text-muted-foreground">
+            No stops yet. Click Add Stop to choose a city and dates.
+          </p>
         ) : (
           <div className="grid gap-3">
-            {stops.map((s) => (
-              <Card key={s.id} className="border-border shadow-none">
-                <CardHeader className="gap-1">
-                  <CardTitle className="text-base">
-                    {s.stop_order}. {s.city_name}
-                  </CardTitle>
-                  <CardDescription>
-                    {s.country} · {String(s.start_date).slice(0, 10)} –{" "}
-                    {String(s.end_date).slice(0, 10)}
-                  </CardDescription>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {activities
-                      .filter((a) => a.stop_id === s.id)
-                      .map((a) => (
-                        <Badge key={a.id} variant="secondary">
-                          {a.activity_name}
-                          {a.start_time ? ` @ ${a.start_time}` : ""}
-                        </Badge>
-                      ))}
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
+            {stops.map((s, index) => {
+              const stopActs = activities.filter((a) => a.stop_id === s.id);
+              return (
+                <Card key={s.id} className="border-border shadow-none">
+                  <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 space-y-1">
+                      <CardTitle className="text-base">
+                        {s.stop_order}. {s.city_name}
+                      </CardTitle>
+                      <CardDescription>
+                        {s.country} · {s.start_date} – {s.end_date}
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="outline"
+                        disabled={busy || index === 0}
+                        onClick={() => moveStop(s.id, "up")}
+                        aria-label={`Move ${s.city_name} up`}
+                      >
+                        <ArrowUpIcon />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="outline"
+                        disabled={busy || index === stops.length - 1}
+                        onClick={() => moveStop(s.id, "down")}
+                        aria-label={`Move ${s.city_name} down`}
+                      >
+                        <ArrowDownIcon />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        disabled={busy}
+                        onClick={() => deleteStop(s.id, s.city_name)}
+                        aria-label={`Remove ${s.city_name}`}
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {stopActs.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        No activities assigned yet.
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {stopActs.map((a) => (
+                          <li
+                            key={a.id}
+                            className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-medium">{a.activity_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {a.day_date}
+                                {a.start_time ? ` · ${a.start_time}` : ""}
+                                {a.end_time ? `–${a.end_time}` : ""}
+                                {" · "}$
+                                {Number(a.custom_cost ?? a.cost ?? 0).toFixed(0)}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive"
+                              disabled={busy}
+                              onClick={() => removeActivity(s.id, a.id)}
+                            >
+                              Remove
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={busy}
+                      onClick={() => {
+                        setSelectedStopId(s.id);
+                        setDayDate(s.start_date);
+                      }}
+                    >
+                      Assign activity
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
-        <form onSubmit={addStop} className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="city">City</Label>
-            <select
-              id="city"
-              className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
-              value={cityId}
-              onChange={(e) => setCityId(e.target.value)}
-              required
-            >
-              <option value="">Select city…</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}, {c.country}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ss">Stop start</Label>
-            <Input id="ss" type="date" value={stopStart} onChange={(e) => setStopStart(e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="se">Stop end</Label>
-            <Input id="se" type="date" value={stopEnd} onChange={(e) => setStopEnd(e.target.value)} required />
-          </div>
-          <Button type="submit" disabled={busy} className="sm:col-span-2">
-            Add Stop
-          </Button>
-        </form>
+        {showAddStop ? (
+          <form
+            onSubmit={addStop}
+            className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2"
+          >
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="city">Select city</Label>
+              <NativeSelect
+                id="city"
+                className="w-full"
+                value={cityId}
+                onChange={(e) => setCityId(e.target.value)}
+                required
+              >
+                <NativeSelectOption value="">Choose a city…</NativeSelectOption>
+                {cities.map((c) => (
+                  <NativeSelectOption key={c.id} value={c.id}>
+                    {c.name}, {c.country}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ss">Stop start date</Label>
+              <Input
+                id="ss"
+                type="date"
+                value={stopStart}
+                min={trip?.start_date}
+                max={trip?.end_date}
+                onChange={(e) => setStopStart(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="se">Stop end date</Label>
+              <Input
+                id="se"
+                type="date"
+                value={stopEnd}
+                min={stopStart || trip?.start_date}
+                max={trip?.end_date}
+                onChange={(e) => setStopEnd(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={busy} className="sm:col-span-2">
+              {busy ? (
+                <>
+                  <Spinner data-icon="inline-start" />
+                  Saving…
+                </>
+              ) : (
+                "Save stop"
+              )}
+            </Button>
+          </form>
+        ) : null}
       </section>
 
+      <Separator />
+
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Add activity</h2>
-        <form onSubmit={addActivity} className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2">
+        <div>
+          <h2 className="text-lg font-semibold">Assign activities</h2>
+          <p className="text-sm text-muted-foreground">
+            Pick a stop, then add catalog activities for a day in that stop’s
+            date range.
+          </p>
+        </div>
+        <form
+          onSubmit={addActivity}
+          className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2"
+        >
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="stop">Stop</Label>
-            <select
+            <NativeSelect
               id="stop"
-              className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+              className="w-full"
               value={selectedStopId}
               onChange={(e) => setSelectedStopId(e.target.value)}
               required
             >
-              <option value="">Select stop…</option>
+              <NativeSelectOption value="">Select stop…</NativeSelectOption>
               {stops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.city_name}
-                </option>
+                <NativeSelectOption key={s.id} value={s.id}>
+                  {s.stop_order}. {s.city_name}
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="act">Activity</Label>
-            <select
+            <NativeSelect
               id="act"
-              className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+              className="w-full"
               value={activityId}
               onChange={(e) => setActivityId(e.target.value)}
               required
+              disabled={!selectedStopId}
             >
-              <option value="">Select activity…</option>
+              <NativeSelectOption value="">
+                {selectedStopId ? "Select activity…" : "Select a stop first"}
+              </NativeSelectOption>
               {cityOptions.map((a) => (
-                <option key={a.id} value={a.id}>
+                <NativeSelectOption key={a.id} value={a.id}>
                   {a.name} ({a.type}) — ${Number(a.cost).toFixed(0)}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
+            {selectedStopId && cityOptions.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                No activities in the catalog for this city yet.
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="day">Day</Label>
-            <Input id="day" type="date" value={dayDate} onChange={(e) => setDayDate(e.target.value)} required />
+            <Input
+              id="day"
+              type="date"
+              value={dayDate}
+              onChange={(e) => setDayDate(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="st">Start time</Label>
-            <Input id="st" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            <Input
+              id="st"
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="et">End time</Label>
-            <Input id="et" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            <Input
+              id="et"
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
           </div>
-          <Button type="submit" disabled={busy || !selectedStopId} className="sm:col-span-2">
+          <div className="flex items-end">
+            {selectedStopId ? (
+              <Badge variant="outline">
+                {
+                  stops.find((s) => s.id === selectedStopId)?.city_name
+                }
+              </Badge>
+            ) : null}
+          </div>
+          <Button
+            type="submit"
+            disabled={busy || !selectedStopId}
+            className="sm:col-span-2"
+          >
             Add to my trip
           </Button>
         </form>
