@@ -1,7 +1,5 @@
 "use client";
 
-import { CheckIcon } from "lucide-react";
-import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 export type BookingStep = {
@@ -14,8 +12,9 @@ type BookingStepperProps = {
   steps: BookingStep[];
   currentStep: number;
   maxReachedStep: number;
-  subtitle?: string;
   onStepSelect?: (index: number) => void;
+  /** overlap = large white card; navbar = compact steps in sticky header */
+  variant?: "overlap" | "navbar";
   className?: string;
 };
 
@@ -23,95 +22,107 @@ export function BookingStepper({
   steps,
   currentStep,
   maxReachedStep,
-  subtitle,
   onStepSelect,
+  variant = "overlap",
   className,
 }: BookingStepperProps) {
-  const total = steps.length;
-  const percent = Math.round(((currentStep + 1) / total) * 100);
-  const current = steps[currentStep];
+  const isNav = variant === "navbar";
 
   return (
-    <div className={cn("space-y-5", className)}>
-      <Progress value={percent} className="w-full">
-        <ProgressLabel>
-          Step {currentStep + 1} of {total}
-          {current ? ` · ${current.label}` : ""}
-        </ProgressLabel>
-        <ProgressValue />
-      </Progress>
-      {subtitle ? (
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
-      ) : null}
+    <ol className={cn("relative flex w-full items-start", className)}>
+      {steps.map((step, index) => {
+        const isCurrent = index === currentStep;
+        const isComplete = index < currentStep;
+        const isReachable = index <= maxReachedStep;
+        const canSelect = Boolean(onStepSelect) && isReachable && !isCurrent;
+        const isLast = index === steps.length - 1;
+        const lineFilled = index < currentStep;
 
-      <ol className="flex w-full items-start">
-        {steps.map((step, index) => {
-          const isCurrent = index === currentStep;
-          const isComplete = index < currentStep;
-          const isReachable = index <= maxReachedStep;
-          const canSelect = Boolean(onStepSelect) && isReachable && !isCurrent;
-          const segmentDone = index < currentStep;
-
-          return (
-            <li
-              key={step.id}
-              className={cn(
-                "relative flex flex-col items-center",
-                index < total - 1 ? "flex-1" : "flex-none"
-              )}
-            >
-              <div className="flex w-full items-center">
-                <button
-                  type="button"
-                  disabled={!canSelect}
-                  onClick={() => canSelect && onStepSelect?.(index)}
-                  aria-current={isCurrent ? "step" : undefined}
-                  aria-label={`${step.label}${isComplete ? ", completed" : isCurrent ? ", current" : ""}`}
+        return (
+          <li
+            key={step.id}
+            className="relative flex min-w-0 flex-1 flex-col items-center text-center"
+          >
+            <div className="relative flex h-8 w-full items-center justify-center sm:h-9">
+              {!isLast ? (
+                <span
+                  aria-hidden
                   className={cn(
-                    "relative z-[1] flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:size-10",
-                    isComplete &&
-                      "border-primary bg-primary text-primary-foreground",
-                    isCurrent &&
-                      "border-primary bg-background text-primary ring-4 ring-primary/15",
-                    !isCurrent &&
-                      !isComplete &&
-                      "border-border bg-muted/50 text-muted-foreground",
-                    canSelect && "cursor-pointer hover:border-primary/70",
-                    !canSelect && !isCurrent && "cursor-default"
+                    "absolute top-1/2 left-[calc(50%+10px)] right-[calc(-50%+10px)] h-px -translate-y-1/2",
+                    isNav
+                      ? lineFilled
+                        ? "bg-white"
+                        : "bg-white/35"
+                      : lineFilled
+                        ? "bg-primary"
+                        : "bg-border"
                   )}
-                >
-                  {isComplete ? (
-                    <CheckIcon className="size-4" strokeWidth={2.5} />
-                  ) : (
-                    index + 1
-                  )}
-                </button>
-                {index < total - 1 ? (
-                  <div
-                    aria-hidden
-                    className={cn(
-                      "mx-1 h-0.5 min-w-2 flex-1 rounded-full sm:mx-2",
-                      segmentDone ? "bg-primary" : "bg-border"
-                    )}
-                  />
-                ) : null}
-              </div>
-              <span
+                />
+              ) : null}
+
+              <button
+                type="button"
+                disabled={!canSelect}
+                onClick={() => canSelect && onStepSelect?.(index)}
+                aria-current={isCurrent ? "step" : undefined}
+                aria-label={`${step.label}${isComplete ? ", completed" : isCurrent ? ", current" : ""}`}
                 className={cn(
-                  "mt-2 max-w-[4.25rem] self-start text-center text-[10px] leading-tight font-medium sm:max-w-[5.5rem] sm:text-xs",
-                  "translate-x-[calc(-50%+1.125rem)] sm:translate-x-[calc(-50%+1.25rem)]",
-                  isCurrent || isComplete
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                  "relative z-1 flex shrink-0 items-center justify-center rounded-full font-semibold transition-all outline-none focus-visible:ring-2",
+                  isNav &&
+                    isCurrent &&
+                    "size-7 bg-white text-xs text-primary focus-visible:ring-white/50 sm:size-8",
+                  isNav &&
+                    isComplete &&
+                    "size-5 bg-white text-[10px] text-primary sm:size-6",
+                  isNav &&
+                    !isCurrent &&
+                    !isComplete &&
+                    "size-2.5 bg-white/80 sm:size-3",
+                  !isNav &&
+                    "size-10 text-sm focus-visible:ring-primary/40 sm:size-11",
+                  !isNav &&
+                    (isCurrent || isComplete) &&
+                    "border border-primary bg-primary text-primary-foreground shadow-sm",
+                  !isNav &&
+                    !isCurrent &&
+                    !isComplete &&
+                    "border border-border bg-muted text-muted-foreground",
+                  canSelect && "cursor-pointer hover:opacity-90",
+                  !canSelect && !isCurrent && "cursor-default"
                 )}
               >
-                <span className="sm:hidden">{step.shortLabel ?? step.label}</span>
-                <span className="hidden sm:inline">{step.label}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+                {isNav ? (
+                  isCurrent || isComplete ? (
+                    index + 1
+                  ) : (
+                    <span className="sr-only">{index + 1}</span>
+                  )
+                ) : isComplete ? (
+                  index + 1
+                ) : (
+                  index + 1
+                )}
+              </button>
+            </div>
+
+            <span
+              className={cn(
+                "mt-1 max-w-[4.75rem] truncate text-[10px] leading-tight font-medium sm:max-w-none sm:text-xs",
+                isNav && "text-white/90",
+                isNav && isCurrent && "font-semibold text-white",
+                !isNav && "mt-2",
+                !isNav &&
+                  (isCurrent || isComplete
+                    ? "text-foreground"
+                    : "text-muted-foreground")
+              )}
+            >
+              <span className="sm:hidden">{step.shortLabel ?? step.label}</span>
+              <span className="hidden sm:inline">{step.label}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

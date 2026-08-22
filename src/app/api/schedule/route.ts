@@ -1,41 +1,38 @@
-import { redirect } from "next/navigation";
-import { AppShell } from "@/components/layout/app-header";
-import {
-  ScheduleCalendar,
-  type ScheduleActivity,
-  type ScheduleDayMeta,
-  type ScheduleTrip,
-} from "@/components/schedule/schedule-calendar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getCurrentUser } from "@/lib/auth/session";
+import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/auth/require-user";
 import { query } from "@/lib/db";
 
-type Props = { searchParams: Promise<{ month?: string }> };
+export const runtime = "nodejs";
 
 function monthBounds(monthStr: string) {
   const [y, m] = monthStr.split("-").map(Number);
   const monthStart = `${monthStr}-01`;
   const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const monthEnd = `${monthStr}-${String(lastDay).padStart(2, "0")}`;
-  return { monthStart, monthEnd };
+  return { y, m, monthStart, monthEnd, lastDay };
 }
 
-export default async function SchedulePage({ searchParams }: Props) {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect("/?auth=login&next=" + encodeURIComponent("/schedule"));
-  }
+export async function GET(request: NextRequest) {
+  const auth = await requireUser();
+  if (auth.error) return auth.error;
 
-  const sp = await searchParams;
   const now = new Date();
+  const monthParam = request.nextUrl.searchParams.get("month");
   const monthStr =
-    sp.month && /^\d{4}-\d{2}$/.test(sp.month)
-      ? sp.month
+    monthParam && /^\d{4}-\d{2}$/.test(monthParam)
+      ? monthParam
       : `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+
   const { monthStart, monthEnd } = monthBounds(monthStr);
 
   try {
-    const tripsRes = await query<ScheduleTrip>(
+    const trips = await query<{
+      id: string;
+      name: string;
+      start_date: string;
+      end_date: string;
+      cover_photo: string | null;
+    }>(
       `SELECT
          id, name,
          to_char(start_date, 'YYYY-MM-DD') AS start_date,
@@ -46,10 +43,19 @@ export default async function SchedulePage({ searchParams }: Props) {
          AND start_date <= $3::date
          AND end_date >= $2::date
        ORDER BY start_date ASC`,
-      [user.id, monthStart, monthEnd]
+      [auth.user.id, monthStart, monthEnd]
     );
 
-    const activitiesRes = await query<ScheduleActivity>(
+    const activities = await query<{
+      id: string;
+      trip_id: string;
+      trip_name: string;
+      day_date: string;
+      title: string;
+      start_time: string | null;
+      city_name: string | null;
+      cost: number | null;
+    }>(
       `SELECT
          ta.id,
          t.id AS trip_id,
@@ -67,60 +73,63 @@ export default async function SchedulePage({ searchParams }: Props) {
        WHERE t.user_id = $1
          AND ta.day_date BETWEEN $2::date AND $3::date
        ORDER BY ta.day_date ASC, ta.act_order ASC, ta.start_time ASC NULLS LAST`,
-      [user.id, monthStart, monthEnd]
+      [auth.user.id, monthStart, monthEnd]
     );
 
-    const days: Record<string, ScheduleDayMeta> = {};
+    const days: Record<
+      string,
+      {
+        date: string;
+        tripIds: string[];
+        activityCount: number;
+        labels: string[];
+      }
+    > = {};
+
     function ensureDay(date: string) {
       if (!days[date]) {
-        days[date] = { date, tripIds: [], activityCount: 0, labels: [] };
+        days[date] = {
+          date,
+          tripIds: [],
+          activityCount: 0,
+          labels: [],
+        };
       }
       return days[date];
     }
 
-    for (const t of tripsRes.rows) {
-      let cursor = t.start_date < monthStart ? monthStart : t.start_date;
-      const stop = t.end_date > monthEnd ? monthEnd : t.end_date;
+    for (const t of trips.rows) {
+      const start = t.start_date;
+      const end = t.end_date;
+      let cursor = start < monthStart ? monthStart : start;
+      const stop = end > monthEnd ? monthEnd : end;
       while (cursor <= stop) {
         const day = ensureDay(cursor);
         if (!day.tripIds.includes(t.id)) day.tripIds.push(t.id);
         if (!day.labels.includes(t.name)) day.labels.push(t.name);
         const [yy, mm, dd] = cursor.split("-").map(Number);
-        cursor = new Date(Date.UTC(yy, mm - 1, dd + 1))
-          .toISOString()
-          .slice(0, 10);
+        const next = new Date(Date.UTC(yy, mm - 1, dd + 1));
+        cursor = next.toISOString().slice(0, 10);
       }
     }
 
-    for (const a of activitiesRes.rows) {
+    for (const a of activities.rows) {
       const day = ensureDay(a.day_date);
       day.activityCount += 1;
       if (!day.tripIds.includes(a.trip_id)) day.tripIds.push(a.trip_id);
     }
 
-    return (
-      <AppShell user={user}>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-          <ScheduleCalendar
-            month={monthStr}
-            trips={tripsRes.rows}
-            activities={activitiesRes.rows}
-            days={days}
-          />
-        </main>
-      </AppShell>
-    );
+    return NextResponse.json({
+      month: monthStr,
+      monthStart,
+      monthEnd,
+      trips: trips.rows,
+      activities: activities.rows,
+      days,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to load schedule";
-    return (
-      <AppShell user={user}>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
-          <Alert variant="destructive">
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        </main>
-      </AppShell>
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
