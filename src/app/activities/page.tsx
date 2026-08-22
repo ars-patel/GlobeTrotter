@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { getCurrentUser } from "@/lib/auth/session";
 
-/** Legacy alias → unified search */
-export default async function CitiesPage({
+export default async function ActivitiesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -12,8 +11,7 @@ export default async function CitiesPage({
   if (!user) redirect("/login");
   const sp = await searchParams;
   const q = new URLSearchParams();
-  q.set("type", "city");
+  q.set("type", "activity");
   if (sp.q) q.set("q", sp.q);
-  if (sp.country) q.set("country", sp.country);
   redirect(`/search?${q.toString()}`);
 }

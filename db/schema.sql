@@ -181,3 +181,13 @@ CREATE TABLE app_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Optional CHECK constraints (also in migration 003_check_constraints.sql)
+ALTER TABLE trips ADD CONSTRAINT trips_dates_check CHECK (end_date >= start_date);
+ALTER TABLE trip_stops ADD CONSTRAINT trip_stops_dates_check CHECK (end_date >= start_date);
+ALTER TABLE trip_costs ADD CONSTRAINT trip_costs_amount_nonnegative CHECK (amount >= 0);
+ALTER TABLE activities ADD CONSTRAINT activities_cost_nonnegative CHECK (cost >= 0);
+ALTER TABLE packing_suggestion_templates ADD CONSTRAINT packing_templates_month_range CHECK (
+  (month_from IS NULL AND month_to IS NULL)
+  OR (month_from BETWEEN 1 AND 12 AND month_to BETWEEN 1 AND 12)
+);
+

@@ -196,10 +196,18 @@ Used By: Every feature topic
 
 ## S. Definition of Done
 
-- [ ] `001` + `002` applied
-- [ ] Seeds run (catalogs only via SQL seeds, not frontend files)
-- [ ] `/api/health` OK
-- [ ] `db/schema.sql` updated
-- [ ] Mockup tables/columns documented and present (`packing_suggestion_templates`, `app_settings`, etc.)
-- [ ] No ad-hoc DDL in app routes
-- [ ] Confirmed no domain hardcoded lists required for schema to demo
+- [x] `001` + `002` applied (+ `003` check constraints)
+- [x] Seeds run (catalogs only via SQL seeds, not frontend files) — cities/activities + packing templates + app_settings
+- [x] `/api/health` OK (reports schema + catalog counts)
+- [x] `db/schema.sql` updated
+- [x] Mockup tables/columns documented and present (`packing_suggestion_templates`, `app_settings`, etc.)
+- [x] No ad-hoc DDL in app routes
+- [x] Confirmed no domain hardcoded lists required for schema to demo
+
+### Apply / verify commands
+
+```bash
+npm run db:apply    # pending SQL → apply → archive
+npm run db:verify   # confirm required tables + catalog counts
+# GET http://localhost:3000/api/health
+```
