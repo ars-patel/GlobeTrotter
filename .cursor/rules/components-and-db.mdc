@@ -1,0 +1,28 @@
+---
+description: Reusable UI via shadcn/ui; DB schema via backend migrations and seeds
+alwaysApply: true
+---
+
+# Components & Database Conventions
+
+## Reusable components only
+
+- Build UI from **reusable** pieces under `src/components/` (shared) and `src/components/ui/` (primitives).
+- Do **not** inline one-off markup for buttons, inputs, dialogs, tables, etc. when a shared or shadcn component exists.
+- New feature UI: extract reusable components first; pages compose them—they are not dump sites for duplicated JSX.
+- Prefer props and composition over copy-pasting the same block across screens.
+
+## shadcn/ui
+
+- Use components from `@/components/ui` (shadcn/ui). Do not invent parallel primitives (custom Button/Input/Dialog) when shadcn already provides them.
+- Import like: `import { Button } from "@/components/ui/button"`.
+- If a needed primitive is missing, add it with the shadcn CLI (`npx shadcn@latest add <name>`), then use it.
+- Style with Tailwind utilities and existing CSS variables; keep the neutral / project theme consistent.
+
+## Backend: migrations & seeding
+
+- Create/alter **tables and models** only via SQL in `backend/migrations/` — not by editing ad-hoc SQL in app code or only updating `db/schema.sql` without a migration.
+- Seed data lives in `backend/seeding/` (SQL or scripts). Do not hardcode large seed datasets in API routes.
+- Naming: migrations `NNN_description.sql` (e.g. `001_initial_schema.sql`); seeds `NNN_description.sql` or a documented seed script.
+- Apply migrations in order; keep them additive and reversible when practical.
+- App data access stays in Next.js API routes + `src/lib/db.ts`; schema changes belong in `backend/migrations/`.
