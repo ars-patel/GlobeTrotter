@@ -12,7 +12,9 @@ export function TopDestinationsRow({ cities }: { cities: DestinationItem[] }) {
     <section className="space-y-4">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Top Destinations</h2>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Recommended destinations
+          </h2>
           <p className="text-sm text-muted-foreground">
             Popular cities from the live catalog
           </p>

@@ -33,7 +33,7 @@ export function HeroBanner({
 
       <div className="relative mx-auto flex min-h-[280px] w-full max-w-6xl flex-col justify-end px-6 py-10 sm:min-h-[340px]">
         {userDisplayName ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-medium text-foreground/90">
             Welcome back, {userDisplayName}
           </p>
         ) : null}
