@@ -3,11 +3,8 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuthModal } from "@/components/auth/auth-modal-context";
 
 export function FinalCta() {
-  const { openAuth } = useAuthModal();
-
   return (
     <section className="relative overflow-hidden py-16 sm:py-20">
       <div className="absolute inset-0">
@@ -28,16 +25,15 @@ export function FinalCta() {
           view from the first stop.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => openAuth("signup", "/trips/new")}
+          <Link
+            href="/signup?next=/trips/new"
             className={cn(
               buttonVariants({ size: "lg" }),
               "bg-white font-semibold text-primary hover:bg-white/90"
             )}
           >
             Plan New Trip
-          </button>
+          </Link>
           <Link
             href="#how-it-works"
             className={cn(

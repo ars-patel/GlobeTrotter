@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth/require-user";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -14,9 +14,13 @@ const ALLOWED = new Map([
   ["image/gif", "gif"],
 ]);
 
+/**
+ * Authenticated users: profile photo updates.
+ * Guests: allowed for registration photo (Design 2) before account exists.
+ */
 export async function POST(request: Request) {
-  const auth = await requireUser();
-  if (auth.error) return auth.error;
+  // Soft-check session — do not block guest signup uploads
+  await getCurrentUser().catch(() => null);
 
   try {
     const form = await request.formData();

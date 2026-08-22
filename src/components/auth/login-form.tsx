@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { PasswordField } from "@/components/auth/password-field";
+import { AuthPhotoCircle } from "@/components/auth/auth-photo-circle";
 import { loginSchema } from "@/lib/auth/schemas";
 import { safeNextPath } from "@/lib/auth/safe-next";
 
@@ -83,7 +84,9 @@ export function LoginForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      <AuthPhotoCircle mode="display" />
+
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -92,23 +95,19 @@ export function LoginForm({
 
       <FieldGroup>
         <Field data-invalid={Boolean(fieldErrors.identifier) || undefined}>
-          <FieldLabel htmlFor="identifier">Email</FieldLabel>
+          <FieldLabel htmlFor="identifier">Username</FieldLabel>
           <Input
             id="identifier"
             name="identifier"
             type="text"
-            inputMode="email"
             autoComplete="username"
-            placeholder="you@example.com"
+            placeholder="Username or email"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             disabled={loading}
             aria-invalid={Boolean(fieldErrors.identifier)}
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Email or username
-          </p>
           {fieldErrors.identifier ? (
             <FieldError>{fieldErrors.identifier}</FieldError>
           ) : null}
@@ -144,7 +143,7 @@ export function LoginForm({
             Logging in…
           </>
         ) : (
-          "Log in"
+          "Login"
         )}
       </Button>
 
@@ -156,7 +155,7 @@ export function LoginForm({
             className="font-medium text-foreground underline underline-offset-4"
             onClick={onSwitchToSignup}
           >
-            Sign up
+            Register
           </button>
         ) : (
           <Link
@@ -167,7 +166,7 @@ export function LoginForm({
             }
             className="font-medium text-foreground underline underline-offset-4"
           >
-            Sign up
+            Register
           </Link>
         )}
       </p>

@@ -26,7 +26,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useAuthModal } from "@/components/auth/auth-modal-context";
 import { useEffect, useState } from "react";
 
 const NAV = [
@@ -44,7 +43,6 @@ type MeUser = {
 };
 
 export function SiteNavbar() {
-  const { openAuth } = useAuthModal();
   const [user, setUser] = useState<MeUser | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -152,26 +150,24 @@ export function SiteNavbar() {
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => openAuth("login")}
+              <Link
+                href="/login"
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "sm" }),
                   "hidden sm:inline-flex"
                 )}
               >
                 Login
-              </button>
-              <button
-                type="button"
-                onClick={() => openAuth("signup", "/trips/new")}
+              </Link>
+              <Link
+                href="/signup?next=/trips/new"
                 className={cn(
                   buttonVariants({ size: "sm" }),
                   "hidden font-semibold sm:inline-flex"
                 )}
               >
                 Plan New Trip
-              </button>
+              </Link>
             </>
           )}
 
@@ -226,29 +222,23 @@ export function SiteNavbar() {
                   </>
                 ) : (
                   <>
-                    <button
-                      type="button"
+                    <Link
+                      href="/signup?next=/trips/new"
+                      onClick={() => setMobileOpen(false)}
                       className={cn(buttonVariants(), "w-full")}
-                      onClick={() => {
-                        setMobileOpen(false);
-                        openAuth("signup", "/trips/new");
-                      }}
                     >
                       Plan New Trip
-                    </button>
-                    <button
-                      type="button"
+                    </Link>
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileOpen(false)}
                       className={cn(
                         buttonVariants({ variant: "outline" }),
                         "w-full"
                       )}
-                      onClick={() => {
-                        setMobileOpen(false);
-                        openAuth("login");
-                      }}
                     >
                       Login
-                    </button>
+                    </Link>
                   </>
                 )}
               </div>

@@ -16,6 +16,7 @@ const PUBLIC_PREFIXES = [
   "/api/categories",
   "/api/reviews",
   "/api/journeys",
+  "/api/uploads/avatar",
   "/journeys",
 ];
 

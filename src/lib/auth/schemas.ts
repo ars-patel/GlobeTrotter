@@ -9,6 +9,12 @@ export const signupSchema = z.object({
   home_country: z.string().trim().max(120).optional(),
   additional_info: z.string().trim().max(2000).optional(),
   username: z.string().trim().max(60).optional(),
+  photo_url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => !v || v.startsWith("/uploads/"), "Invalid photo URL")
+    .optional(),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -16,11 +22,7 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  identifier: z
-    .string()
-    .trim()
-    .min(1, "Email or username is required")
-    .max(255),
+  identifier: z.string().trim().min(1, "Username is required").max(255),
   password: z.string().min(1, "Password is required").max(128),
 });
 

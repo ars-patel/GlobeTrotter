@@ -1,6 +1,5 @@
 "use client";
 
-import { Globe2Icon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LoginForm } from "@/components/auth/login-form";
-import { QuickRegisterForm } from "@/components/auth/quick-register-form";
+import { RegisterForm } from "@/components/auth/register-form";
 import type { AuthMode } from "@/components/auth/auth-modal-context";
 
 export function AuthDialog({
@@ -30,26 +29,24 @@ export function AuthDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={
-          isSignup ? "max-h-[90vh] overflow-y-auto sm:max-w-md" : "sm:max-w-md"
+          isSignup
+            ? "max-h-[90vh] overflow-y-auto sm:max-w-2xl"
+            : "sm:max-w-md"
         }
       >
-        <DialogHeader className="items-center text-center sm:items-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-full border border-border bg-muted/50">
-            <Globe2Icon className="size-6 text-foreground" aria-hidden />
-          </div>
-          <DialogTitle className="font-display text-xl font-bold tracking-tight">
-            {isSignup ? "Create your account" : "Welcome back"}
-          </DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>{isSignup ? "Registration" : "Login"}</DialogTitle>
           <DialogDescription>
             {isSignup
-              ? "Register to book journeys and manage your trips."
-              : "Log in to search, book, and manage reservations."}
+              ? "Create your GlobeTrotter account"
+              : "Log in to GlobeTrotter"}
           </DialogDescription>
         </DialogHeader>
 
         {isSignup ? (
-          <QuickRegisterForm
+          <RegisterForm
             nextPath={nextPath}
+            embedded
             onSwitchToLogin={() => onSwitchMode("login")}
           />
         ) : (

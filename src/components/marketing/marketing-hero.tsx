@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuthModal } from "@/components/auth/auth-modal-context";
 
 export function MarketingHero({
   imageUrl,
@@ -12,8 +11,6 @@ export function MarketingHero({
   imageUrl: string;
   imageAlt: string;
 }) {
-  const { openAuth } = useAuthModal();
-
   return (
     <section className="relative w-full">
       <div className="relative min-h-[70vh] w-full overflow-hidden sm:min-h-[78vh]">
@@ -36,16 +33,15 @@ export function MarketingHero({
             planning made personal and organized.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => openAuth("signup", "/trips/new")}
+            <Link
+              href="/signup?next=/trips/new"
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "bg-white font-semibold text-primary hover:bg-white/90"
               )}
             >
               Plan New Trip
-            </button>
+            </Link>
             <Link
               href="#destinations"
               className={cn(

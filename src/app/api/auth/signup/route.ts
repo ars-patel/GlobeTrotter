@@ -67,11 +67,16 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(data.password);
     const displayName = `${data.first_name} ${data.last_name}`.trim();
 
+    const photoUrl =
+      data.photo_url && data.photo_url.startsWith("/uploads/")
+        ? data.photo_url
+        : null;
+
     const { rows } = await query(
       `INSERT INTO users (
          email, username, password_hash, name, first_name, last_name,
-         phone, home_city, home_country, additional_info
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         phone, home_city, home_country, additional_info, photo_url
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING
          id, email, username, first_name, last_name, name,
          phone, home_city, home_country, additional_info,
@@ -87,6 +92,7 @@ export async function POST(request: Request) {
         data.home_city ?? null,
         data.home_country ?? null,
         data.additional_info ?? null,
+        photoUrl,
       ]
     );
 
