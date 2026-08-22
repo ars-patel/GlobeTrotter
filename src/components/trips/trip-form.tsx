@@ -1,21 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  BookingStepper,
+  type BookingStep,
+} from "@/components/trips/booking-stepper";
 import { createTripSchema } from "@/lib/trips/schemas";
 
 type Suggestion = { id: string; label: string };
 
+const STEPS: BookingStep[] = [
+  { id: "basics", label: "Trip basics", shortLabel: "Basics" },
+  { id: "route", label: "Route", shortLabel: "Route" },
+  { id: "details", label: "Details", shortLabel: "Details" },
+  { id: "packing", label: "Packing", shortLabel: "Pack" },
+  { id: "review", label: "Review", shortLabel: "Review" },
+];
+
+function formatDateLabel(value: string) {
+  if (!value) return "—";
+  try {
+    return new Date(value + "T12:00:00").toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return value;
+  }
+}
+
 export function TripForm() {
   const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [maxReached, setMaxReached] = useState(0);
+
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -50,9 +80,13 @@ export function TripForm() {
         if (cancelled) return;
         const list = data.suggestions ?? [];
         setSuggestions(list);
-        const next: Record<string, boolean> = {};
-        for (const s of list) next[s.id] = true;
-        setSelected(next);
+        setSelected((prev) => {
+          const next: Record<string, boolean> = {};
+          for (const s of list) {
+            next[s.id] = prev[s.id] ?? true;
+          }
+          return next;
+        });
       } catch (e) {
         if (!cancelled) {
           setSuggestions([]);
@@ -67,8 +101,55 @@ export function TripForm() {
     };
   }, [startDate]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function goTo(index: number) {
+    if (index < 0 || index >= STEPS.length) return;
+    if (index > maxReached + 1) return;
+    setError(null);
+    setStep(index);
+    setMaxReached((m) => Math.max(m, index));
+  }
+
+  function validateStep(index: number): string | null {
+    if (index === 0) {
+      if (!name.trim()) return "Trip name is required";
+      if (!startDate) return "Start date is required";
+      if (!endDate) return "End date is required";
+      if (endDate < startDate) return "End date must be on or after start date";
+      return null;
+    }
+    if (index === 1) {
+      if (!startPoint.trim()) return "Start point is required";
+      if (!endPoint.trim()) return "End point is required";
+      return null;
+    }
+    if (index === 2) {
+      if (budgetLimit !== "" && Number.isNaN(Number(budgetLimit))) {
+        return "Budget must be a valid number";
+      }
+      if (budgetLimit !== "" && Number(budgetLimit) < 0) {
+        return "Budget cannot be negative";
+      }
+      return null;
+    }
+    return null;
+  }
+
+  function onContinue() {
+    const msg = validateStep(step);
+    if (msg) {
+      setError(msg);
+      return;
+    }
+    setError(null);
+    goTo(step + 1);
+  }
+
+  function onBack() {
+    setError(null);
+    goTo(step - 1);
+  }
+
+  async function onSubmit() {
     setError(null);
 
     const packing_items = suggestions
@@ -99,7 +180,10 @@ export function TripForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
-      const data = (await res.json()) as { trip?: { id: string }; error?: string };
+      const data = (await res.json()) as {
+        trip?: { id: string };
+        error?: string;
+      };
       if (!res.ok) {
         setError(data.error ?? "Unable to create trip");
         return;
@@ -113,98 +197,353 @@ export function TripForm() {
     }
   }
 
+  const packingCount = suggestions.filter((s) => selected[s.id]).length;
+  const isLast = step === STEPS.length - 1;
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <div className="space-y-8">
+      <header className="space-y-1">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Trip booking
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Plan your trip
+        </h1>
+        <p className="max-w-xl text-sm text-muted-foreground">
+          Complete each step to book your itinerary foundation. You can go back
+          anytime to change earlier details.
+        </p>
+      </header>
+
+      <BookingStepper
+        steps={STEPS}
+        currentStep={step}
+        maxReachedStep={maxReached}
+        onStepSelect={(index) => {
+          if (index < step) {
+            goTo(index);
+            return;
+          }
+          const msg = validateStep(step);
+          if (msg) {
+            setError(msg);
+            return;
+          }
+          goTo(index);
+        }}
+      />
+
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
 
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Plan your trip</h1>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="name">Trip Name</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} disabled={loading} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={loading} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="start_point">Start Point</Label>
-            <Input id="start_point" value={startPoint} onChange={(e) => setStartPoint(e.target.value)} disabled={loading} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="end_point">End Point</Label>
-            <Input id="end_point" value={endPoint} onChange={(e) => setEndPoint(e.target.value)} disabled={loading} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} disabled={loading} rows={3} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="cover">Cover photo URL (optional)</Label>
-            <Input id="cover" value={coverPhoto} onChange={(e) => setCoverPhoto(e.target.value)} disabled={loading} placeholder="https://..." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="budget">Budget limit (optional)</Label>
-            <Input id="budget" type="number" min={0} step="0.01" value={budgetLimit} onChange={(e) => setBudgetLimit(e.target.value)} disabled={loading} />
-          </div>
-        </div>
+      <div className="min-h-[280px] rounded-xl border border-border bg-card/30 p-5 sm:p-6">
+        {step === 0 ? (
+          <section className="space-y-5" aria-labelledby="step-basics">
+            <div>
+              <h2 id="step-basics" className="text-lg font-semibold">
+                Trip basics
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Name your trip and set travel dates.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="name">Trip name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={loading}
+                  placeholder="e.g. Europe summer loop"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="start_date">Start date</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date">End date</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 1 ? (
+          <section className="space-y-5" aria-labelledby="step-route">
+            <div>
+              <h2 id="step-route" className="text-lg font-semibold">
+                Route
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Where does the journey begin and end?
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="start_point">Start point</Label>
+                <Input
+                  id="start_point"
+                  value={startPoint}
+                  onChange={(e) => setStartPoint(e.target.value)}
+                  disabled={loading}
+                  placeholder="City or airport"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_point">End point</Label>
+                <Input
+                  id="end_point"
+                  value={endPoint}
+                  onChange={(e) => setEndPoint(e.target.value)}
+                  disabled={loading}
+                  placeholder="City or airport"
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
+          <section className="space-y-5" aria-labelledby="step-details">
+            <div>
+              <h2 id="step-details" className="text-lg font-semibold">
+                Trip details
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Optional extras — you can skip and add later.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={loading}
+                  rows={3}
+                  placeholder="Notes for your itinerary…"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cover">Cover photo URL</Label>
+                <Input
+                  id="cover"
+                  value={coverPhoto}
+                  onChange={(e) => setCoverPhoto(e.target.value)}
+                  disabled={loading}
+                  placeholder="https://…"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="budget">Budget limit</Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={budgetLimit}
+                  onChange={(e) => setBudgetLimit(e.target.value)}
+                  disabled={loading}
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 3 ? (
+          <section className="space-y-5" aria-labelledby="step-packing">
+            <div>
+              <h2 id="step-packing" className="text-lg font-semibold">
+                Packing suggestions
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Based on your start date — toggle what you want to bring.
+              </p>
+            </div>
+            {loadingPacking ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Spinner /> Loading suggestions…
+              </div>
+            ) : suggestions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {startDate
+                  ? "No suggestions for this date yet."
+                  : "Go back and pick a start date to load packing ideas."}
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {suggestions.map((s) => (
+                  <Card key={s.id} className="border-border shadow-none">
+                    <CardHeader className="flex flex-row items-start gap-3 space-y-0 p-3">
+                      <Checkbox
+                        checked={Boolean(selected[s.id])}
+                        onCheckedChange={(v) =>
+                          setSelected((prev) => ({
+                            ...prev,
+                            [s.id]: Boolean(v),
+                          }))
+                        }
+                      />
+                      <CardTitle className="text-sm leading-snug font-medium">
+                        {s.label}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : null}
+
+        {step === 4 ? (
+          <section className="space-y-5" aria-labelledby="step-review">
+            <div>
+              <h2 id="step-review" className="text-lg font-semibold">
+                Review & confirm
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Check everything below. Use Back or the step numbers to edit.
+              </p>
+            </div>
+
+            <dl className="space-y-4 text-sm">
+              <ReviewRow
+                label="Trip"
+                onEdit={() => goTo(0)}
+                value={
+                  <>
+                    <span className="font-medium">{name || "—"}</span>
+                    <span className="mt-0.5 block text-muted-foreground">
+                      {formatDateLabel(startDate)} – {formatDateLabel(endDate)}
+                    </span>
+                  </>
+                }
+              />
+              <Separator />
+              <ReviewRow
+                label="Route"
+                onEdit={() => goTo(1)}
+                value={
+                  <span>
+                    {startPoint || "—"} → {endPoint || "—"}
+                  </span>
+                }
+              />
+              <Separator />
+              <ReviewRow
+                label="Details"
+                onEdit={() => goTo(2)}
+                value={
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>
+                      Description:{" "}
+                      {description.trim() ? description : "None"}
+                    </li>
+                    <li>
+                      Cover: {coverPhoto.trim() ? "Set" : "None"}
+                    </li>
+                    <li>
+                      Budget:{" "}
+                      {budgetLimit === ""
+                        ? "No limit"
+                        : `$${Number(budgetLimit).toFixed(2)}`}
+                    </li>
+                  </ul>
+                }
+              />
+              <Separator />
+              <ReviewRow
+                label="Packing"
+                onEdit={() => goTo(3)}
+                value={
+                  <span className="text-muted-foreground">
+                    {packingCount} item{packingCount === 1 ? "" : "s"} selected
+                  </span>
+                }
+              />
+            </dl>
+          </section>
+        ) : null}
       </div>
 
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-base font-semibold">Suggest the items for trip (based on weather)</h2>
-          <p className="text-sm text-muted-foreground">
-            Suggestions load from the database for your start date.
-          </p>
-        </div>
-        {loadingPacking ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Spinner /> Loading suggestions…
-          </div>
-        ) : suggestions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Pick a start date to load packing suggestions.
-          </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={step === 0 || loading}
+        >
+          <ChevronLeftIcon data-icon="inline-start" />
+          Back
+        </Button>
+
+        <p className="order-last w-full text-center text-xs text-muted-foreground sm:order-none sm:w-auto">
+          {STEPS[step]?.label} · {step + 1}/{STEPS.length}
+        </p>
+
+        {isLast ? (
+          <Button type="button" onClick={onSubmit} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner data-icon="inline-start" />
+                Booking…
+              </>
+            ) : (
+              "Confirm & open builder"
+            )}
+          </Button>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {suggestions.map((s) => (
-              <Card key={s.id} className="border-border shadow-none">
-                <CardHeader className="flex flex-row items-start gap-3 space-y-0 p-3">
-                  <Checkbox
-                    checked={Boolean(selected[s.id])}
-                    onCheckedChange={(v) =>
-                      setSelected((prev) => ({ ...prev, [s.id]: Boolean(v) }))
-                    }
-                  />
-                  <CardTitle className="text-sm font-medium leading-snug">
-                    {s.label}
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          <Button type="button" onClick={onContinue} disabled={loading}>
+            Continue
+            <ChevronRightIcon data-icon="inline-end" />
+          </Button>
         )}
       </div>
+    </div>
+  );
+}
 
-      <Button type="submit" disabled={loading}>
-        {loading ? (
-          <>
-            <Spinner data-icon="inline-start" />
-            Saving…
-          </>
-        ) : (
-          "Save trip"
-        )}
+function ReviewRow({
+  label,
+  value,
+  onEdit,
+}: {
+  label: string;
+  value: ReactNode;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          {label}
+        </dt>
+        <dd className="mt-1">{value}</dd>
+      </div>
+      <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
+        Edit
       </Button>
-    </form>
+    </div>
   );
 }
