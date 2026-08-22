@@ -125,16 +125,33 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Display only for major titles — body/card headings stay sans */
   h1,
-  h2,
+  h2 {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
   h3 {
-    font-family: var(--font-display), var(--font-sans), ui-serif, Georgia, serif;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 }
 
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+}
+
 .marketing-sky {
-  background:
-    radial-gradient(1200px 500px at 10% -10%, oklch(0.9 0.04 210 / 0.7), transparent 60%),
-    radial-gradient(900px 400px at 90% 0%, oklch(0.88 0.05 230 / 0.5), transparent 55%),
-    linear-gradient(180deg, oklch(0.97 0.02 215), oklch(0.985 0.01 220));
+  background: linear-gradient(
+    180deg,
+    oklch(0.97 0.015 215) 0%,
+    oklch(0.99 0.008 220) 40%,
+    oklch(0.985 0.01 220) 100%
+  );
+}
+
+.marketing-band {
+  background: oklch(0.94 0.02 215);
 }

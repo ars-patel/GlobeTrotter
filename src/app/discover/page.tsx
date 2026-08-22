@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-header";
 import { HeroBanner } from "@/components/discover/hero-banner";
+import { DiscoverQuickActions } from "@/components/discover/discover-quick-actions";
 import { TopDestinationsRow } from "@/components/discover/top-destinations-row";
 import { FeaturedTripsRow } from "@/components/discover/featured-trips-row";
 import { RecentTripsRow, type RecentTripItem } from "@/components/discover/recent-trips-row";
@@ -151,10 +152,10 @@ async function loadDiscoverData(userId: string) {
     banner: {
       url: map["discover.banner_url"] ?? null,
       alt: map["discover.banner_alt"] ?? "Travel inspiration",
-      title: map["discover.hero_title"] ?? "Discover your next journey",
+      title: map["discover.hero_title"] ?? "Your travel hub",
       subtitle:
         map["discover.hero_subtitle"] ??
-        "Explore destinations, review your trips, and keep budgets on track.",
+        "Plan multi-city itineraries, book journeys, track budgets, and explore destinations — all from here.",
     },
     topDestinations: destinations.rows,
     featuredTrips: featured.rows,
@@ -166,7 +167,7 @@ async function loadDiscoverData(userId: string) {
 
 export default async function DiscoverPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/?auth=login&next=/discover");
 
   try {
     const data = await loadDiscoverData(user.id);
@@ -179,8 +180,10 @@ export default async function DiscoverPage() {
           title={data.banner.title}
           subtitle={data.banner.subtitle}
           userDisplayName={user.first_name}
+          tripCount={data.budgetSummary.tripCount}
         />
-        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 py-10">
+        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-14 px-4 py-10 sm:px-6">
+          <DiscoverQuickActions />
           <RecentTripsRow trips={data.recentTrips} />
           <BudgetHighlights
             trips={data.budgetTrips}
@@ -196,7 +199,7 @@ export default async function DiscoverPage() {
       error instanceof Error ? error.message : "Failed to load Discover";
     return (
       <AppShell user={user}>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
           <Alert variant="destructive">
             <AlertDescription>{message}</AlertDescription>
           </Alert>

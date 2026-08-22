@@ -1,94 +1,139 @@
 import { query } from "@/lib/db";
-import { toDateString } from "@/lib/dates";
-import { SiteHeader } from "@/components/marketing/site-header";
+import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { SiteNavbar } from "@/components/marketing/site-navbar";
 import { MarketingHero } from "@/components/marketing/marketing-hero";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { BookingStepsPreview } from "@/components/marketing/booking-steps-preview";
 import { DestinationRow } from "@/components/marketing/destination-row";
 import { TrendingTrips } from "@/components/marketing/trending-trips";
+import { WhyChooseUs } from "@/components/marketing/why-choose-us";
+import { ReviewsSection } from "@/components/marketing/reviews-section";
+import { FinalCta } from "@/components/marketing/final-cta";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { JOURNEY_SELECT, type JourneyRow } from "@/lib/journeys";
 
 export default async function HomePage() {
-  const settings = await query<{ key: string; value: string }>(
-    `SELECT key, value FROM app_settings
-     WHERE key IN ('home.hero_image', 'home.hero_alt', 'discover.banner_url', 'discover.banner_alt')`
-  );
-  const map = Object.fromEntries(settings.rows.map((r) => [r.key, r.value]));
-  const heroImage =
-    map["home.hero_image"] ||
-    map["discover.banner_url"] ||
-    "/marketing/hero.jpg";
-  const heroAlt =
-    map["home.hero_alt"] ||
-    map["discover.banner_alt"] ||
-    "Travel horizon at golden hour";
-
-  const cities = await query<{
+  let heroImage = "/marketing/hero.jpg";
+  let heroAlt = "Travel horizon at golden hour";
+  let destinations: {
     id: string;
     name: string;
     country: string;
-    image_url: string | null;
-    popularity: number;
-  }>(
-    `SELECT id, name, country, image_url, popularity
-     FROM cities
-     ORDER BY popularity DESC, name ASC
-     LIMIT 8`
-  );
-
-  const trips = await query<{
-    id: string;
-    name: string;
     description: string | null;
-    cover_photo: string | null;
-    start_date: string;
-    end_date: string;
-    start_point: string | null;
-    end_point: string | null;
-    share_slug: string | null;
-  }>(
-    `SELECT
-       id, name, description, cover_photo,
-       to_char(start_date, 'YYYY-MM-DD') AS start_date,
-       to_char(end_date, 'YYYY-MM-DD') AS end_date,
-       start_point, end_point, share_slug
-     FROM trips
-     WHERE is_public = TRUE OR is_featured = TRUE
-     ORDER BY is_featured DESC, created_at DESC
-     LIMIT 6`
-  );
+    starting_price: number | null;
+    image_url: string | null;
+  }[] = [];
+  let categories: {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    icon: string;
+    image_url: string | null;
+  }[] = [];
+  let journeys: JourneyRow[] = [];
+  let reviews: {
+    id: string;
+    author_name: string;
+    rating: number;
+    title: string | null;
+    body: string;
+    is_demo: boolean;
+  }[] = [];
+
+  try {
+    const settings = await query<{ key: string; value: string }>(
+      `SELECT key, value FROM app_settings
+       WHERE key IN ('home.hero_image', 'home.hero_alt', 'discover.banner_url', 'discover.banner_alt')`
+    );
+    const map = Object.fromEntries(settings.rows.map((r) => [r.key, r.value]));
+    heroImage =
+      map["home.hero_image"] || map["discover.banner_url"] || heroImage;
+    heroAlt = map["home.hero_alt"] || map["discover.banner_alt"] || heroAlt;
+
+    const destRes = await query<{
+      id: string;
+      name: string;
+      country: string;
+      description: string | null;
+      starting_price: number | null;
+      image_url: string | null;
+    }>(
+      `SELECT id, name, country, description,
+              starting_price::float8 AS starting_price, image_url
+       FROM cities
+       ORDER BY popularity DESC, name ASC
+       LIMIT 8`
+    );
+    destinations = destRes.rows;
+
+    const catRes = await query<{
+      id: string;
+      slug: string;
+      title: string;
+      description: string;
+      icon: string;
+      image_url: string | null;
+    }>(
+      `SELECT id, slug, title, description, icon, image_url
+       FROM travel_categories
+       ORDER BY sort_order ASC`
+    );
+    categories = catRes.rows;
+
+    const journeyRes = await query<JourneyRow>(
+      `SELECT ${JOURNEY_SELECT}
+       FROM journeys j
+       JOIN cities fc ON fc.id = j.from_city_id
+       JOIN cities tc ON tc.id = j.to_city_id
+       JOIN operators o ON o.id = j.operator_id
+       LEFT JOIN travel_categories cat ON cat.id = j.category_id
+       WHERE j.is_featured = TRUE AND j.seats_available > 0
+       ORDER BY j.departure_at ASC
+       LIMIT 6`
+    );
+    journeys = journeyRes.rows;
+
+    const reviewRes = await query<{
+      id: string;
+      author_name: string;
+      rating: number;
+      title: string | null;
+      body: string;
+      is_demo: boolean;
+    }>(
+      `SELECT id, author_name, rating::float8 AS rating, title, body, is_demo
+       FROM reviews
+       ORDER BY created_at DESC
+       LIMIT 6`
+    );
+    reviews = reviewRes.rows;
+  } catch {
+    // Keep marketing shell if DB briefly unavailable.
+  }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader />
-      <MarketingHero imageUrl={heroImage} imageAlt={heroAlt} />
-      <div className="marketing-sky flex-1">
-        <FeatureGrid />
-        <DestinationRow
-          cities={cities.rows.map((c) => ({
-            id: c.id,
-            name: c.name,
-            country: c.country,
-            image_url: c.image_url,
-            popularity: Number(c.popularity),
+    <MarketingShell>
+      <div className="flex min-h-full flex-1 flex-col bg-background">
+        <SiteNavbar />
+        <MarketingHero
+          imageUrl={heroImage}
+          imageAlt={heroAlt}
+          destinations={destinations.map((d) => ({
+            id: d.id,
+            name: d.name,
+            country: d.country,
           }))}
         />
+        <DestinationRow cities={destinations} />
+        <FeatureGrid categories={categories} />
+        <TrendingTrips trips={journeys} />
+        <WhyChooseUs />
         <BookingStepsPreview />
-        <TrendingTrips
-          trips={trips.rows.map((t) => ({
-            id: t.id,
-            name: t.name,
-            description: t.description,
-            cover_photo: t.cover_photo,
-            start_date: toDateString(t.start_date),
-            end_date: toDateString(t.end_date),
-            start_point: t.start_point,
-            end_point: t.end_point,
-            share_slug: t.share_slug,
-          }))}
-        />
+        <ReviewsSection reviews={reviews} />
+        <FinalCta />
+        <SiteFooter />
       </div>
-      <SiteFooter />
-    </div>
+    </MarketingShell>
   );
 }

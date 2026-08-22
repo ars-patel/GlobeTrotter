@@ -2,12 +2,6 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -45,71 +39,72 @@ export function BudgetHighlights({
 }) {
   return (
     <section className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Money
+          </p>
+          <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
             Budget highlights
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Estimated spend vs limits on your active and upcoming trips
+          <p className="mt-1 text-sm text-muted-foreground">
+            Estimated spend vs limits on active and upcoming trips.
           </p>
         </div>
         <Link
           href="/trips"
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
         >
           Manage trips
         </Link>
       </div>
 
       {summary.tripCount === 0 ? (
-        <Empty className="border border-dashed">
+        <Empty className="border border-dashed bg-card/50">
           <EmptyHeader>
-            <EmptyTitle>No budget data yet</EmptyTitle>
+            <EmptyTitle>Budgets appear after you plan a trip</EmptyTitle>
             <EmptyDescription>
-              Create a trip with a budget limit and activities to see highlights
-              here.
+              Add a budget limit when creating a trip, then log costs in the
+              Budget tab.
             </EmptyDescription>
           </EmptyHeader>
+          <Link
+            href="/trips/new"
+            className={cn(buttonVariants({ size: "sm" }), "mt-3")}
+          >
+            Plan a trip with a budget
+          </Link>
         </Empty>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Card className="border-border shadow-none">
-              <CardHeader className="gap-1">
-                <CardDescription>Active / upcoming trips</CardDescription>
-                <CardTitle className="text-2xl tabular-nums">
-                  {summary.tripCount}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="border-border shadow-none">
-              <CardHeader className="gap-1">
-                <CardDescription>Budget set</CardDescription>
-                <CardTitle className="text-2xl tabular-nums">
-                  {summary.totalBudget > 0
-                    ? money(summary.totalBudget)
-                    : "—"}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="border-border shadow-none">
-              <CardHeader className="gap-1">
-                <CardDescription>Estimated spend</CardDescription>
-                <CardTitle className="text-2xl tabular-nums">
-                  {money(summary.totalSpend)}
-                </CardTitle>
-                {summary.tripsOverBudget > 0 ? (
-                  <Badge variant="destructive" className="w-fit">
-                    {summary.tripsOverBudget} over budget
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="w-fit">
-                    On track
-                  </Badge>
-                )}
-              </CardHeader>
-            </Card>
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs text-muted-foreground">Active / upcoming</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {summary.tripCount}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs text-muted-foreground">Budget set</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {summary.totalBudget > 0 ? money(summary.totalBudget) : "—"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs text-muted-foreground">Estimated spend</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {money(summary.totalSpend)}
+              </p>
+              {summary.tripsOverBudget > 0 ? (
+                <Badge variant="destructive" className="mt-2">
+                  {summary.tripsOverBudget} over budget
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="mt-2">
+                  On track
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -123,44 +118,50 @@ export function BudgetHighlights({
               const over = limit != null && spend > limit;
 
               return (
-                <Card key={trip.id} className="border-border shadow-none">
-                  <CardHeader className="gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <CardTitle className="truncate text-base">
-                          {trip.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {String(trip.start_date).slice(0, 10)} –{" "}
-                          {String(trip.end_date).slice(0, 10)}
-                        </CardDescription>
-                      </div>
-                      <Link
-                        href={`/trips/${trip.id}/budget`}
-                        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-                      >
-                        Details
-                      </Link>
+                <div
+                  key={trip.id}
+                  className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{trip.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {String(trip.start_date).slice(0, 10)} –{" "}
+                        {String(trip.end_date).slice(0, 10)}
+                      </p>
                     </div>
+                    <Link
+                      href={`/trips/${trip.id}/budget`}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "sm" })
+                      )}
+                    >
+                      Details
+                    </Link>
+                  </div>
 
-                    {limit != null && limit > 0 && pct != null ? (
+                  {limit != null && limit > 0 && pct != null ? (
+                    <div className="mt-3">
                       <Progress
                         value={pct}
-                        className={cn(over && "[&_[data-slot=progress-indicator]]:bg-destructive")}
+                        className={cn(
+                          over &&
+                            "[&_[data-slot=progress-indicator]]:bg-destructive"
+                        )}
                       >
                         <ProgressLabel>
                           {money(spend)} of {money(limit)}
                         </ProgressLabel>
                         <ProgressValue />
                       </Progress>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Spend {money(spend)}
-                        {limit == null ? " · no budget limit set" : null}
-                      </p>
-                    )}
-                  </CardHeader>
-                </Card>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      Spend {money(spend)}
+                      {limit == null ? " · no budget limit set" : null}
+                    </p>
+                  )}
+                </div>
               );
             })}
           </div>

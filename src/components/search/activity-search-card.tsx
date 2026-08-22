@@ -61,18 +61,18 @@ export function ActivitySearchCard({
         }`;
 
   return (
-    <Card className="overflow-hidden border-border shadow-none">
-      <div className="grid sm:grid-cols-[140px_1fr]">
-        <div className="aspect-[4/3] bg-muted sm:aspect-auto sm:min-h-[120px]">
+    <Card className="overflow-hidden border-border shadow-sm transition hover:shadow-md">
+      <div className="grid sm:grid-cols-[160px_1fr]">
+        <div className="aspect-4/3 bg-muted sm:aspect-auto sm:min-h-[140px]">
           {activity.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={activity.image_url}
-              alt={activity.name}
-              className="h-full w-full object-cover"
+              alt=""
+              className="size-full object-cover"
             />
           ) : (
-            <div className="flex h-full min-h-[100px] items-center justify-center px-2 text-center text-xs text-muted-foreground">
+            <div className="flex size-full min-h-[100px] items-center justify-center px-2 text-center text-xs text-muted-foreground">
               {activity.type}
             </div>
           )}
@@ -80,7 +80,9 @@ export function ActivitySearchCard({
 
         <div className="flex flex-col">
           <CardHeader className="gap-2">
-            <CardTitle className="text-base">{activity.name}</CardTitle>
+            <CardTitle className="font-display text-lg font-bold tracking-tight">
+              {activity.name}
+            </CardTitle>
             <CardDescription>
               {activity.city_name}, {activity.country}
             </CardDescription>

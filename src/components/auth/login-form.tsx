@@ -17,12 +17,20 @@ import { PasswordField } from "@/components/auth/password-field";
 import { loginSchema } from "@/lib/auth/schemas";
 import { safeNextPath } from "@/lib/auth/safe-next";
 
-export function LoginForm() {
+export function LoginForm({
+  nextPath: nextPathProp,
+  embedded = false,
+  onSwitchToSignup,
+}: {
+  nextPath?: string;
+  embedded?: boolean;
+  onSwitchToSignup?: () => void;
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(
-    () => safeNextPath(searchParams.get("next")),
-    [searchParams]
+    () => nextPathProp ?? safeNextPath(searchParams.get("next")),
+    [nextPathProp, searchParams]
   );
 
   const [identifier, setIdentifier] = useState("");
@@ -99,7 +107,7 @@ export function LoginForm() {
             required
           />
           <p className="text-xs text-muted-foreground">
-            Email (required by account) — username also works
+            Email or username
           </p>
           {fieldErrors.identifier ? (
             <FieldError>{fieldErrors.identifier}</FieldError>
@@ -136,22 +144,32 @@ export function LoginForm() {
             Logging in…
           </>
         ) : (
-          "Login"
+          "Log in"
         )}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
         No account?{" "}
-        <Link
-          href={
-            nextPath !== "/discover"
-              ? `/signup?next=${encodeURIComponent(nextPath)}`
-              : "/signup"
-          }
-          className="underline underline-offset-4"
-        >
-          Sign up
-        </Link>
+        {embedded && onSwitchToSignup ? (
+          <button
+            type="button"
+            className="font-medium text-foreground underline underline-offset-4"
+            onClick={onSwitchToSignup}
+          >
+            Sign up
+          </button>
+        ) : (
+          <Link
+            href={
+              nextPath !== "/discover"
+                ? `/signup?next=${encodeURIComponent(nextPath)}`
+                : "/signup"
+            }
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            Sign up
+          </Link>
+        )}
       </p>
     </form>
   );

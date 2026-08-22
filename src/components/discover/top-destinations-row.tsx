@@ -6,24 +6,29 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function TopDestinationsRow({ cities }: { cities: DestinationItem[] }) {
   return (
     <section className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Inspiration
+          </p>
+          <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
             Recommended destinations
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Popular cities from the live catalog
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tap a city to search activities — or use it as a stop on a new trip.
           </p>
         </div>
         <Link
           href="/search?type=city"
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          See all
+          See all cities
         </Link>
       </div>
 
@@ -32,7 +37,7 @@ export function TopDestinationsRow({ cities }: { cities: DestinationItem[] }) {
           <EmptyHeader>
             <EmptyTitle>No destinations yet</EmptyTitle>
             <EmptyDescription>
-              Run database seeds to load cities into PostgreSQL.
+              Seed the cities catalog to populate this row.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

@@ -52,12 +52,20 @@ type FieldKey =
   | "confirm_password"
   | "username";
 
-export function RegisterForm() {
+export function RegisterForm({
+  nextPath: nextPathProp,
+  embedded = false,
+  onSwitchToLogin,
+}: {
+  nextPath?: string;
+  embedded?: boolean;
+  onSwitchToLogin?: () => void;
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(
-    () => safeNextPath(searchParams.get("next")),
-    [searchParams]
+    () => nextPathProp ?? safeNextPath(searchParams.get("next")),
+    [nextPathProp, searchParams]
   );
 
   const [form, setForm] = useState<FormState>(initial);
@@ -303,16 +311,26 @@ export function RegisterForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link
-          href={
-            nextPath !== "/discover"
-              ? `/login?next=${encodeURIComponent(nextPath)}`
-              : "/login"
-          }
-          className="underline underline-offset-4"
-        >
-          Login
-        </Link>
+        {embedded && onSwitchToLogin ? (
+          <button
+            type="button"
+            className="font-medium text-foreground underline underline-offset-4"
+            onClick={onSwitchToLogin}
+          >
+            Log in
+          </button>
+        ) : (
+          <Link
+            href={
+              nextPath !== "/discover"
+                ? `/login?next=${encodeURIComponent(nextPath)}`
+                : "/login"
+            }
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            Log in
+          </Link>
+        )}
       </p>
     </form>
   );

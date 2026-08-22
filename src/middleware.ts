@@ -12,10 +12,16 @@ const PUBLIC_PREFIXES = [
   "/api/share",
   "/api/auth",
   "/api/health",
+  "/api/destinations",
+  "/api/categories",
+  "/api/reviews",
+  "/api/journeys",
+  "/journeys",
 ];
 
 function isPublicPath(pathname: string) {
   if (pathname === "/") return true;
+  if (pathname === "/api/trips/search") return true;
   return PUBLIC_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
@@ -32,7 +38,8 @@ export function middleware(request: NextRequest) {
 
   if (!isPublicPath(pathname) && !isAuthed) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/";
+    url.searchParams.set("auth", "login");
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
@@ -62,11 +69,6 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname === "/") {
-    if (isAuthed) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/discover";
-      return NextResponse.redirect(url);
-    }
     return NextResponse.next();
   }
 

@@ -33,7 +33,7 @@ export function DeleteAccountDialog() {
         return;
       }
       setOpen(false);
-      router.push("/login");
+      router.push("/");
       router.refresh();
     } catch {
       setError("Failed to delete account");
