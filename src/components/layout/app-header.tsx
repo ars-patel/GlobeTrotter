@@ -70,6 +70,17 @@ export function AppHeader({ user }: AppHeaderProps) {
                 </Link>
               );
             })}
+            {user.role === "ADMIN" ? (
+              <Link
+                href="/admin"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  navActive(pathname, "/admin") && "bg-muted"
+                )}
+              >
+                Admin
+              </Link>
+            ) : null}
           </nav>
         ) : (
           <div className="flex-1" />
