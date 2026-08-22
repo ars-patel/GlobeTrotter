@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Source_Sans_3, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const geistSans = Geist({
+const display = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+});
+
+const sans = Source_Sans_3({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -14,8 +19,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GlobeTrotter",
-  description: "Personalized multi-city travel planning",
+  title: "GlobeTrotter — Personalized multi-city travel planning",
+  description:
+    "Plan multi-city itineraries, budgets, calendars, and shareable trips in one place.",
 };
 
 export default function RootLayout({
@@ -26,9 +32,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>

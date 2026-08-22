@@ -62,9 +62,12 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = isAuthed ? "/discover" : "/login";
-    return NextResponse.redirect(url);
+    if (isAuthed) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/discover";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();

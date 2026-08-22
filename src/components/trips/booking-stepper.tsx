@@ -14,6 +14,7 @@ type BookingStepperProps = {
   steps: BookingStep[];
   currentStep: number;
   maxReachedStep: number;
+  subtitle?: string;
   onStepSelect?: (index: number) => void;
   className?: string;
 };
@@ -22,20 +23,26 @@ export function BookingStepper({
   steps,
   currentStep,
   maxReachedStep,
+  subtitle,
   onStepSelect,
   className,
 }: BookingStepperProps) {
   const total = steps.length;
   const percent = Math.round(((currentStep + 1) / total) * 100);
+  const current = steps[currentStep];
 
   return (
     <div className={cn("space-y-5", className)}>
       <Progress value={percent} className="w-full">
         <ProgressLabel>
           Step {currentStep + 1} of {total}
+          {current ? ` · ${current.label}` : ""}
         </ProgressLabel>
         <ProgressValue />
       </Progress>
+      {subtitle ? (
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      ) : null}
 
       <ol className="flex w-full items-start">
         {steps.map((step, index) => {

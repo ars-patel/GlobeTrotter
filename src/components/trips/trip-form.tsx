@@ -22,12 +22,20 @@ import { createTripSchema } from "@/lib/trips/schemas";
 type Suggestion = { id: string; label: string };
 
 const STEPS: BookingStep[] = [
-  { id: "basics", label: "Trip basics", shortLabel: "Basics" },
+  { id: "basics", label: "Basics", shortLabel: "Basics" },
   { id: "route", label: "Route", shortLabel: "Route" },
-  { id: "cover", label: "Cover", shortLabel: "Cover" },
+  { id: "cover", label: "Cover & budget", shortLabel: "Cover" },
   { id: "packing", label: "Packing", shortLabel: "Pack" },
   { id: "review", label: "Review", shortLabel: "Review" },
 ];
+
+const STEP_SUBTITLES = [
+  "Name your trip and set the travel window.",
+  "Where does the journey start and end?",
+  "Add a cover photo and optional budget limit.",
+  "Choose packing suggestions for your dates.",
+  "Confirm details, then open the itinerary builder.",
+] as const;
 
 function formatDateLabel(value: string) {
   if (!value) return "—";
@@ -211,8 +219,7 @@ export function TripForm() {
           Plan your trip
         </h1>
         <p className="max-w-xl text-sm text-muted-foreground">
-          Complete each step to book your itinerary foundation. You can go back
-          anytime to change earlier details.
+          Step {step + 1} of {STEPS.length}: {STEP_SUBTITLES[step]}
         </p>
       </header>
 
@@ -220,6 +227,7 @@ export function TripForm() {
         steps={STEPS}
         currentStep={step}
         maxReachedStep={maxReached}
+        subtitle={STEP_SUBTITLES[step]}
         onStepSelect={(index) => {
           if (index < step) {
             goTo(index);
@@ -245,10 +253,10 @@ export function TripForm() {
           <section className="space-y-5" aria-labelledby="step-basics">
             <div>
               <h2 id="step-basics" className="text-lg font-semibold">
-                Trip basics
+                Basics
               </h2>
               <p className="text-sm text-muted-foreground">
-                Name, dates, and description — the core of your plan.
+                Name your trip and set the travel window.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
