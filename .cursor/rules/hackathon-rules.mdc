@@ -1,0 +1,27 @@
+---
+description: Odoo Hackathon must-have and nice-to-have rules for GlobeTrotter
+alwaysApply: true
+---
+
+# Hackathon Rules (GlobeTrotter)
+
+Follow these when building or reviewing any feature. Prefer choices that satisfy **Must have** over optional polish.
+
+## Must have
+
+- **Dynamic data**: Prefer APIs, DB queries, or other live/dynamic sources. Static JSON is OK only for early prototyping—replace before considering a feature done.
+- **Responsive UI**: Clean layout, consistent color scheme and spacing; works on desktop and mobile.
+- **Input validation**: Validate all user inputs (forms, search, dates, budgets). Fail clearly; never trust client-only checks for critical data.
+- **Intuitive navigation**: Clear menus, logical placement, readable spacing. Users should reach trips, builder, budget, and search without hunting.
+- **Git collaboration**: Meaningful commits and shared ownership. Do not treat a single-person “repo manager” workflow as enough for the team.
+
+## Nice to have
+
+- **Backend & DB**: Prefer real APIs, relational data modeling, and a local database over frontend-only mocks when building itineraries, stops, activities, and expenses.
+- **No blind paste**: Understand and adapt AI/snippet code to this project before shipping it.
+- **Offline / local**: Prefer solutions that still work without full cloud dependency when practical (local DB, cached data, graceful offline UX).
+- **Purposeful stack**: Add libraries or trendy tech only when they clearly improve GlobeTrotter—not for novelty.
+
+## Product alignment
+
+Build toward the problem statement in `PROBLEM_STATEMENT.md`: multi-city itineraries, search, budgets, calendars/timelines, sharing, auth, and relational storage of trips/stops/activities/expenses.
