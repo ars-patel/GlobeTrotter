@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripSubNav } from "@/components/trips/trip-sub-nav";
 import { ItineraryBuilder } from "@/components/trips/itinerary-builder";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -15,12 +15,11 @@ export default async function BuilderPage({ params }: Props) {
   if (!trip) notFound();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-6 py-8">
         <TripSubNav tripId={tripId} active="builder" />
         <ItineraryBuilder tripId={tripId} />
       </main>
-    </div>
+    </AppShell>
   );
 }

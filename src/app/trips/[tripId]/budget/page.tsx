@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripSubNav } from "@/components/trips/trip-sub-nav";
 import { BudgetCharts } from "@/components/trips/budget-charts";
 import { BudgetCostForm } from "@/components/trips/budget-cost-form";
@@ -36,8 +36,7 @@ export default async function BudgetPage({ params }: Props) {
       : null;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-6 py-8">
         <TripSubNav tripId={tripId} active="budget" />
 
@@ -272,6 +271,6 @@ export default async function BudgetPage({ params }: Props) {
           </aside>
         </div>
       </main>
-    </div>
+    </AppShell>
   );
 }

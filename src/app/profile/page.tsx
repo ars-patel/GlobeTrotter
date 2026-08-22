@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { ProfileTripRow } from "@/components/profile/profile-trip-row";
@@ -72,8 +72,7 @@ export default async function ProfilePage() {
     `${user.first_name.slice(0, 1)}${user.last_name.slice(0, 1)}`.toUpperCase();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-4xl flex-1 space-y-10 px-6 py-8">
         <section className="flex flex-wrap items-center gap-4">
           <Avatar className="size-20">
@@ -116,6 +115,6 @@ export default async function ProfilePage() {
 
         <DeleteAccountDialog />
       </main>
-    </div>
+    </AppShell>
   );
 }

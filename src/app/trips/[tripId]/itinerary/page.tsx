@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripSubNav } from "@/components/trips/trip-sub-nav";
 import { ItineraryView } from "@/components/trips/itinerary-view";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,8 +37,7 @@ export default async function ItineraryViewPage({
   const mode = sp.mode === "calendar" ? "calendar" : "list";
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-6 py-8">
         <TripSubNav tripId={tripId} active="itinerary" />
 
@@ -90,6 +89,6 @@ export default async function ItineraryViewPage({
           </Suspense>
         )}
       </main>
-    </div>
+    </AppShell>
   );
 }

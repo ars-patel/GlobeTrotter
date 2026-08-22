@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import { query } from "@/lib/db";
 
@@ -66,8 +66,7 @@ export default async function SchedulePage({ searchParams }: Props) {
   const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-6 py-8">
         <div className="flex items-end justify-between gap-3">
           <div>
@@ -135,6 +134,6 @@ export default async function SchedulePage({ searchParams }: Props) {
           )}
         </section>
       </main>
-    </div>
+    </AppShell>
   );
 }

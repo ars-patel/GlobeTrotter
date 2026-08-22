@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { HeroBanner } from "@/components/discover/hero-banner";
 import { TopDestinationsRow } from "@/components/discover/top-destinations-row";
 import { FeaturedTripsRow } from "@/components/discover/featured-trips-row";
@@ -172,8 +172,7 @@ export default async function DiscoverPage() {
     const data = await loadDiscoverData(user.id);
 
     return (
-      <div className="flex min-h-full flex-1 flex-col">
-        <AppHeader user={user} />
+      <AppShell user={user}>
         <HeroBanner
           url={data.banner.url}
           alt={data.banner.alt}
@@ -190,20 +189,19 @@ export default async function DiscoverPage() {
           <TopDestinationsRow cities={data.topDestinations as never[]} />
           <FeaturedTripsRow trips={data.featuredTrips as never[]} />
         </main>
-      </div>
+      </AppShell>
     );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to load Discover";
     return (
-      <div className="flex min-h-full flex-1 flex-col">
-        <AppHeader user={user} />
+      <AppShell user={user}>
         <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
           <Alert variant="destructive">
             <AlertDescription>{message}</AlertDescription>
           </Alert>
         </main>
-      </div>
+      </AppShell>
     );
   }
 }

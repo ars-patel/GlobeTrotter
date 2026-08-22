@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripSubNav } from "@/components/trips/trip-sub-nav";
 import { ShareTripPanel } from "@/components/trips/share-trip-panel";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -15,8 +15,7 @@ export default async function TripSharePage({ params }: Props) {
   if (!trip) notFound();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-6 py-8">
         <TripSubNav tripId={tripId} active="share" />
         <div>
@@ -31,6 +30,6 @@ export default async function TripSharePage({ params }: Props) {
           appOrigin={(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "")}
         />
       </main>
-    </div>
+    </AppShell>
   );
 }

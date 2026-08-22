@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { AdminStatsCharts } from "@/components/admin/admin-stats-charts";
 import { AdminUsersTable } from "@/components/admin/admin-users-table";
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +48,7 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-8 px-6 py-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -217,6 +216,6 @@ export default async function AdminPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </AppShell>
   );
 }

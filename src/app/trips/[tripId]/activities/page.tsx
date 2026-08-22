@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripSubNav } from "@/components/trips/trip-sub-nav";
 import {
   ActivitySearchCard,
@@ -102,8 +102,7 @@ export default async function TripActivitiesPage({
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-6 py-8">
         <TripSubNav tripId={tripId} active="builder" />
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -243,6 +242,6 @@ export default async function TripActivitiesPage({
           </>
         )}
       </main>
-    </div>
+    </AppShell>
   );
 }

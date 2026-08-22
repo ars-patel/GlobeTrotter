@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { EditTripForm } from "@/components/trips/edit-trip-form";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -17,8 +17,7 @@ export default async function EditTripPage({ params }: Props) {
   if (!trip) notFound();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -52,6 +51,6 @@ export default async function EditTripPage({ params }: Props) {
           }}
         />
       </main>
-    </div>
+    </AppShell>
   );
 }

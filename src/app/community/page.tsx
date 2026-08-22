@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { CommunityComposer } from "@/components/community/community-composer";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -27,8 +27,7 @@ export default async function CommunityPage() {
   );
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-6 py-8 lg:grid-cols-[1fr_280px]">
         <section className="space-y-4">
           <div>
@@ -80,6 +79,6 @@ export default async function CommunityPage() {
           <CommunityComposer />
         </aside>
       </main>
-    </div>
+    </AppShell>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import {
   TripListCard,
   type TripListItem,
@@ -77,8 +77,7 @@ export default async function TripsPage() {
     }
 
     return (
-      <div className="flex min-h-full flex-1 flex-col">
-        <AppHeader user={user} />
+      <AppShell user={user}>
         <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -115,20 +114,19 @@ export default async function TripsPage() {
             </div>
           )}
         </main>
-      </div>
+      </AppShell>
     );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to load trips";
     return (
-      <div className="flex min-h-full flex-1 flex-col">
-        <AppHeader user={user} />
+      <AppShell user={user}>
         <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
           <Alert variant="destructive">
             <AlertDescription>{message}</AlertDescription>
           </Alert>
         </main>
-      </div>
+      </AppShell>
     );
   }
 }

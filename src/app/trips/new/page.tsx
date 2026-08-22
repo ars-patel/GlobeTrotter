@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripForm } from "@/components/trips/trip-form";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -8,11 +8,10 @@ export default async function CreateTripPage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <TripForm />
       </main>
-    </div>
+    </AppShell>
   );
 }

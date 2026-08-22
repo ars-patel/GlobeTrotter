@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { CitySearchCard } from "@/components/search/city-search-card";
 import {
   ActivitySearchCard,
@@ -179,8 +179,7 @@ export default async function SearchPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-6 py-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -417,6 +416,6 @@ export default async function SearchPage({ searchParams }: Props) {
           </div>
         )}
       </main>
-    </div>
+    </AppShell>
   );
 }

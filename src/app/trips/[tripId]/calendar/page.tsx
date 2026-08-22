@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-header";
 import { TripSubNav } from "@/components/trips/trip-sub-nav";
 import { TripCalendarTimeline } from "@/components/trips/trip-calendar-timeline";
 import {
@@ -27,8 +27,7 @@ export default async function TripCalendarPage({ params }: Props) {
   const { stops, activities } = await getTripItinerary(tripId);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader user={user} />
+    <AppShell user={user}>
       <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-6 py-8">
         <TripSubNav tripId={tripId} active="calendar" />
 
@@ -79,6 +78,6 @@ export default async function TripCalendarPage({ params }: Props) {
           />
         )}
       </main>
-    </div>
+    </AppShell>
   );
 }
