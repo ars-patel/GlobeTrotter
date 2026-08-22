@@ -14,16 +14,25 @@ Personalized multi-city travel planning — **Next.js** (App Router + API routes
 
 ### 1. PostgreSQL (pgAdmin)
 
-1. Create a database named `globetrotter`.
-2. Open Query Tool and run migrations in order from `backend/migrations/` (start with `001_initial_schema.sql`, then `002_mockup_alignment.sql`).
-3. Optionally run seeds from `backend/seeding/` (e.g. `001_sample_cities_activities.sql`).
-4. Copy `.env.example` → `.env` and set your connection string:
+1. Create a database (name must match `DATABASE_URL`, e.g. `GlobeTrotter`).
+2. Copy `.env.example` → `.env` and set:
 
 ```env
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/globetrotter
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/GlobeTrotter
 JWT_SECRET=change-me-to-a-long-random-string
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+3. Apply pending migrations + seeds (then auto-archive applied files):
+
+```bash
+npm run db:apply
+```
+
+- Pending SQL lives in `backend/migrations/*.sql` and `backend/seeding/*.sql` (numbered `NNN_*.sql`).
+- After a successful run, each file is moved to `backend/migrations/archived/` or `backend/seeding/archived/`.
+- Re-running `npm run db:apply` is a no-op when nothing is pending.
+- To re-apply on a **fresh** database, copy needed files back from `archived/` into the parent folder (or restore from git history), then run `db:apply` again.
 
 ### 2. Install & run
 
@@ -42,9 +51,12 @@ src/app/                 # Pages + API routes
 src/components/          # Reusable feature components
 src/components/ui/       # shadcn/ui primitives
 src/lib/db.ts            # PostgreSQL pool (pg)
-backend/migrations/      # Table / model SQL migrations
-backend/seeding/         # Seed data SQL
+backend/migrations/      # Pending table SQL (applied files → archived/)
+backend/migrations/archived/
+backend/seeding/         # Pending seed SQL (applied files → archived/)
+backend/seeding/archived/
 db/schema.sql            # Reference snapshot (prefer migrations)
+scripts/db-apply.mjs     # npm run db:apply
 ```
 
 ## Screens (scaffolded)
