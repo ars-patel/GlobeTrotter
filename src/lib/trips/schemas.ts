@@ -8,7 +8,18 @@ export const createTripSchema = z
     start_point: z.string().trim().min(1, "Start point is required").max(200),
     end_point: z.string().trim().min(1, "End point is required").max(200),
     description: z.string().trim().max(5000).optional(),
-    cover_photo: z.string().trim().max(2000).optional(),
+    cover_photo: z
+      .string()
+      .trim()
+      .max(2000)
+      .optional()
+      .refine(
+        (v) =>
+          !v ||
+          v.startsWith("/uploads/") ||
+          /^https?:\/\//i.test(v),
+        "Cover must be an uploaded file or http(s) URL"
+      ),
     budget_limit: z.number().nonnegative().optional().nullable(),
     packing_items: z
       .array(

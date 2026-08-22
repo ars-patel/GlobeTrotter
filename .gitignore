@@ -43,6 +43,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# user-uploaded cover photos (keep folder via .gitkeep)
+/public/uploads/covers/*
+!/public/uploads/covers/.gitkeep
+
 # leftover express scaffold (safe to delete locally)
 /_backend_delete_me/
 /backend/

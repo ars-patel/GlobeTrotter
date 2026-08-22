@@ -16,6 +16,7 @@ import {
   BookingStepper,
   type BookingStep,
 } from "@/components/trips/booking-stepper";
+import { CoverPhotoField } from "@/components/trips/cover-photo-field";
 import { createTripSchema } from "@/lib/trips/schemas";
 
 type Suggestion = { id: string; label: string };
@@ -23,7 +24,7 @@ type Suggestion = { id: string; label: string };
 const STEPS: BookingStep[] = [
   { id: "basics", label: "Trip basics", shortLabel: "Basics" },
   { id: "route", label: "Route", shortLabel: "Route" },
-  { id: "details", label: "Details", shortLabel: "Details" },
+  { id: "cover", label: "Cover", shortLabel: "Cover" },
   { id: "packing", label: "Packing", shortLabel: "Pack" },
   { id: "review", label: "Review", shortLabel: "Review" },
 ];
@@ -247,12 +248,12 @@ export function TripForm() {
                 Trip basics
               </h2>
               <p className="text-sm text-muted-foreground">
-                Name your trip and set travel dates.
+                Name, dates, and description — the core of your plan.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="name">Trip name</Label>
+                <Label htmlFor="name">Trip name *</Label>
                 <Input
                   id="name"
                   value={name}
@@ -260,26 +261,40 @@ export function TripForm() {
                   disabled={loading}
                   placeholder="e.g. Europe summer loop"
                   autoFocus
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="start_date">Start date</Label>
+                <Label htmlFor="start_date">Start date *</Label>
                 <Input
                   id="start_date"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   disabled={loading}
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end_date">End date</Label>
+                <Label htmlFor="end_date">End date *</Label>
                 <Input
                   id="end_date"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   disabled={loading}
+                  required
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={loading}
+                  rows={3}
+                  placeholder="What is this trip about?"
                 />
               </div>
             </div>
@@ -326,36 +341,20 @@ export function TripForm() {
           <section className="space-y-5" aria-labelledby="step-details">
             <div>
               <h2 id="step-details" className="text-lg font-semibold">
-                Trip details
+                Cover & budget
               </h2>
               <p className="text-sm text-muted-foreground">
-                Optional extras — you can skip and add later.
+                Optional cover photo upload and spending limit.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
+              <CoverPhotoField
+                value={coverPhoto}
+                onChange={setCoverPhoto}
+                disabled={loading}
+              />
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={loading}
-                  rows={3}
-                  placeholder="Notes for your itinerary…"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cover">Cover photo URL</Label>
-                <Input
-                  id="cover"
-                  value={coverPhoto}
-                  onChange={(e) => setCoverPhoto(e.target.value)}
-                  disabled={loading}
-                  placeholder="https://…"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget limit</Label>
+                <Label htmlFor="budget">Budget limit (optional)</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -364,7 +363,7 @@ export function TripForm() {
                   value={budgetLimit}
                   onChange={(e) => setBudgetLimit(e.target.value)}
                   disabled={loading}
-                  placeholder="Optional"
+                  placeholder="e.g. 2500"
                 />
               </div>
             </div>
@@ -437,6 +436,11 @@ export function TripForm() {
                     <span className="mt-0.5 block text-muted-foreground">
                       {formatDateLabel(startDate)} – {formatDateLabel(endDate)}
                     </span>
+                    {description.trim() ? (
+                      <span className="mt-1 block text-muted-foreground line-clamp-2">
+                        {description}
+                      </span>
+                    ) : null}
                   </>
                 }
               />
@@ -452,24 +456,29 @@ export function TripForm() {
               />
               <Separator />
               <ReviewRow
-                label="Details"
+                label="Cover & budget"
                 onEdit={() => goTo(2)}
                 value={
-                  <ul className="space-y-1 text-muted-foreground">
-                    <li>
-                      Description:{" "}
-                      {description.trim() ? description : "None"}
-                    </li>
-                    <li>
-                      Cover: {coverPhoto.trim() ? "Set" : "None"}
-                    </li>
-                    <li>
+                  <div className="space-y-2">
+                    {coverPhoto.trim() ? (
+                      <div className="aspect-[16/9] max-w-xs overflow-hidden rounded-md border border-border bg-muted">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={coverPhoto}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">No cover photo</span>
+                    )}
+                    <p className="text-muted-foreground">
                       Budget:{" "}
                       {budgetLimit === ""
                         ? "No limit"
                         : `$${Number(budgetLimit).toFixed(2)}`}
-                    </li>
-                  </ul>
+                    </p>
+                  </div>
                 }
               />
               <Separator />
@@ -507,10 +516,10 @@ export function TripForm() {
             {loading ? (
               <>
                 <Spinner data-icon="inline-start" />
-                Booking…
+                Saving…
               </>
             ) : (
-              "Confirm & open builder"
+              "Save trip"
             )}
           </Button>
         ) : (
