@@ -15,7 +15,7 @@ Personalized multi-city travel planning — **Next.js** (App Router + API routes
 ### 1. PostgreSQL (pgAdmin)
 
 1. Create a database named `globetrotter`.
-2. Open Query Tool and run migrations in order from `backend/migrations/` (start with `001_initial_schema.sql`).
+2. Open Query Tool and run migrations in order from `backend/migrations/` (start with `001_initial_schema.sql`, then `002_mockup_alignment.sql`).
 3. Optionally run seeds from `backend/seeding/` (e.g. `001_sample_cities_activities.sql`).
 4. Copy `.env.example` → `.env` and set your connection string:
 
@@ -49,16 +49,22 @@ db/schema.sql            # Reference snapshot (prefer migrations)
 
 ## Screens (scaffolded)
 
-- Login / Signup
-- Dashboard
+- Login / Signup / Forgot & Reset password (working)
+- Discover (post-login hub shell)
 - My Trips / Create Trip
 - City Search
-- Profile
+- Profile / Schedule / Community (shells)
 
-## API (scaffolded)
+## API
 
 - `GET /api/health` — DB connectivity check
-- `POST /api/auth` — auth stub
+- `POST /api/auth/signup` | `login` | `logout` | `forgot-password` | `reset-password`
+- `GET /api/auth/me`
 - `GET|POST /api/trips`
 - `GET /api/cities`
 - `GET /api/activities`
+
+### Demo login (after seed)
+
+- Email / username: `demo@globetrotter.app` / `demo`
+- Password: `password123`

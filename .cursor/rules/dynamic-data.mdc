@@ -1,0 +1,32 @@
+---
+description: No hardcoded domain data — use PostgreSQL + APIs (not static JSON catalogs)
+alwaysApply: true
+---
+
+# Dynamic Data Only
+
+## Rule
+
+Do **not** hardcode cities, trips, activities, community posts, packing lists, banners, chart series, or filter option lists in React/TS source.
+
+All domain content must be **dynamic**:
+
+```text
+backend/seeding/*.sql  →  PostgreSQL  →  /api/*  →  UI
+```
+
+## Forbidden
+
+- `const CITIES = [...]` / sample trips / fake chart numbers in components or pages
+- `import data from './cities.json'` (or any `src/**/*.json`) as the live catalog
+- JSX “demo” cards that pretend the DB is full
+
+## Allowed
+
+- SQL seeds under `backend/seeding/` for bootstrap catalogs
+- Empty UI states when the API returns `[]`
+- Zod schemas and UI copy (labels, errors) — not domain entity lists
+
+## If you need reference data
+
+Add/update rows via migration + seed SQL, then fetch with `src/lib/db.ts` in a Route Handler. Changing content must not require editing component source.
